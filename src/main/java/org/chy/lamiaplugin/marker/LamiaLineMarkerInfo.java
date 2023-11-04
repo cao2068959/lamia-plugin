@@ -43,57 +43,13 @@ import java.awt.event.MouseEvent;
 
 public class LamiaLineMarkerInfo<T extends PsiElement> extends LineMarkerInfo<T> {
 
+
     static Icon LAMIA_ICON = IconLoader.getIcon("/images/img_2.png", LamiaLineMarkerInfo.class);
 
 
     public LamiaLineMarkerInfo(@NotNull T element) {
-        super(element, element.getTextRange(), LAMIA_ICON, (data) -> "Lamia转换语句", LamiaLineMarkerInfo::click,
+        super(element, element.getTextRange(), LAMIA_ICON, (data) -> "Lamia转换语句", LamiaLineMarkerHandler.of(element.getProject())::click,
                 GutterIconRenderer.Alignment.CENTER, () -> "LamiaMarkerInfo");
-    }
-
-    private static void click(MouseEvent event, PsiElement psiElement) {
-        event.getComponent();
-        showTip("出现----->", event, psiElement);
-        System.out.println("----> 点击");
-    }
-
-    private static void showTip(String msg, MouseEvent event, PsiElement psiElement) {
-        PsiFile containingFile = psiElement.getContainingFile();
-        Project project = psiElement.getProject();
-        PsiDocumentManager documentManager = PsiDocumentManager.getInstance(project);
-
-        JavaCodeFragmentFactory fragmentFactory = JavaCodeFragmentFactory.getInstance(project);
-
-        String a = "    @LamiaMapping\n" +
-                "    private WorkspaceClassVO toWorkspaceVO2(WorkspaceBO workspaceBO) {\n" +
-                "        return (WorkspaceClassVO) Lamia.mapping(workspaceBO);\n" +
-                "    }";
-        JavaCodeFragment code = fragmentFactory.createCodeBlockCodeFragment(a, containingFile, true);
-
-
-        Document document = documentManager.getDocument(containingFile);
-        EditorTextField editorTextField = new EditorTextField(document, project, JavaFileType.INSTANCE, true);
-        editorTextField.setOneLineMode(false);
-
-        //editorTextField.setMaximumSize(new Dimension(0, 300));
-        //editorTextField.setPreferredSize(new Dimension(1200, 1300));
-
-        JBScrollPane jbScrollPane = new JBScrollPane(editorTextField);
-        //jbScrollPane.setPreferredSize(new Dimension(400, 300));
-        //editorTextField.setToolTipText("fefdf");
-        //editorTextField.setText("12312312312\n 12312312312\n 地方额黑胡椒大石街道手机打·1\n");
-
-
-        JBPopupFactory instance = JBPopupFactory.getInstance();
-        LightweightHint lightweightHint = new LightweightHint(editorTextField);
-        HintManager instance1 = HintManager.getInstance();
-
-
-        ApplicationManager.getApplication().invokeLater(() -> {
-            instance1.showHint(jbScrollPane, new RelativePoint(event), 0, 0);
-
-        });
-        //.show(new RelativePoint(event), Balloon.Position.below));
     }
 
 
