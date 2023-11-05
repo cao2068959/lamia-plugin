@@ -26,9 +26,10 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
-
         <ApplicationLoadListener implementation="org.chy.lamiaplugin.LamiaPluginApplicationLoadListener"></ApplicationLoadListener>
-        <java.compiler implementation="org.chy.lamiaplugin.CompilerListener"></java.compiler>
+        <treeGenerator implementation="org.chy.lamiaplugin.LamiaTreeGenerator"/>
+
+        <lang.psiAugmentProvider implementation="org.chy.lamiaplugin.LamiaAugmentProvider"/>
 
         <codeInsight.lineMarkerProvider language="JAVA" implementationClass="org.chy.lamiaplugin.marker.LamiaMarkerProvider"></codeInsight.lineMarkerProvider>
     </extensions>

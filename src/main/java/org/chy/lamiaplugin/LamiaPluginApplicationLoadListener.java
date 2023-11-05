@@ -10,6 +10,7 @@ public class LamiaPluginApplicationLoadListener implements ApplicationLoadListen
 
     @Override
     public void beforeApplicationLoaded(@NotNull Application application, @NotNull Path configPath) {
+
         System.out.println("------> 初始化");
     }
 }
