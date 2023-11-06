@@ -21,51 +21,15 @@ public class LamiaAugmentProvider extends PsiAugmentProvider {
     protected <Psi extends PsiElement> List<Psi> getAugments(@NotNull PsiElement psiElement, @NotNull Class<Psi> type) {
         final List<Psi> emptyResult = Collections.emptyList();
 
-        if (!(psiElement instanceof PsiClass)) {
+        if ((type != PsiClass.class && type != PsiField.class && type != PsiMethod.class)) {
             return emptyResult;
         }
 
-        PsiClass psiClass = (PsiClass) psiElement;
-
-
-        if (PsiField.class.isAssignableFrom(type)) {
-            String fieldName = "chy";
-            if (!"".equals(fieldName)) {
-                PsiType psiType = MyFieldUtils.getPsiType(psiClass, "java.lang.String");
-                PsiField psiField = MyFieldUtils.createCacheField(psiClass, fieldName, psiType);
-                List<PsiElement> psiElementList = new ArrayList<>();
-                psiElementList.add(psiField);
-
-                return (List<Psi>) psiElementList;
-            }
-        } else if (PsiMethod.class.isAssignableFrom(type)) {
-            String fieldName = "chy";
-            String methed = "addChy";
-            boolean addMethod = true;
-            if (StringUtils.isNotBlank(methed)) {
-                addMethod = false;
-            }
-
-            if (!"".equals(fieldName)) {
-                List<PsiElement> psiElementList = new ArrayList<>();
-                if (addMethod) {
-                    PsiType psiType = MyFieldUtils.getPsiType(psiClass, "java.lang.String");
-                    String methodName = "get" + fieldName;
-                    //PsiType.VOID
-                    PsiMethod psiMethod = MyFieldUtils.createCacheMethod(psiClass, methodName, null, psiType);
-                    psiElementList.add(psiMethod);
-
-                    methodName = "set" + fieldName;
-                    List<PsiParameter> parameterList = Lists.newArrayList();
-                    LightParameter lightParameter = new LightParameter(fieldName, psiType, psiClass);
-                    parameterList.add(lightParameter);
-                    psiMethod = MyFieldUtils.createCacheMethod(psiClass, methodName, parameterList, PsiType.VOID);
-                    psiElementList.add(psiMethod);
-
-                    return (List<Psi>) psiElementList;
-                }
-            }
+        if (!(psiElement instanceof PsiField psiField)) {
+            return emptyResult;
         }
+
+
         return emptyResult;
     }
 

@@ -97,8 +97,8 @@ public class MyFieldUtils {
         LightModifierList lightModifierList = (LightModifierList) lightFieldBuilder.getModifierList();
         lightModifierList.addModifier(PsiModifier.PUBLIC);
  
-        lightFieldBuilder.setContainingClass(psiClass);
- 
+        //lightFieldBuilder.setContainingClass(psiClass);
+
         return lightFieldBuilder;
     }
  

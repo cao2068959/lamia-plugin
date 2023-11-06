@@ -28,9 +28,10 @@
     <extensions defaultExtensionNs="com.intellij">
         <ApplicationLoadListener implementation="org.chy.lamiaplugin.LamiaPluginApplicationLoadListener"></ApplicationLoadListener>
         <treeGenerator implementation="org.chy.lamiaplugin.LamiaTreeGenerator"/>
+        <customUsageSearcher implementation=""></customUsageSearcher>
+
 
         <lang.psiAugmentProvider implementation="org.chy.lamiaplugin.LamiaAugmentProvider"/>
-
         <codeInsight.lineMarkerProvider language="JAVA" implementationClass="org.chy.lamiaplugin.marker.LamiaMarkerProvider"></codeInsight.lineMarkerProvider>
     </extensions>
     <actions>
