@@ -29,6 +29,7 @@ public class LamiaLineMarkerHandler {
     private final EditorTextField editorTextField;
     private final JBScrollPane jbScrollPane;
 
+    public static PsiElement psiElement;
 
     public static LamiaLineMarkerHandler of(Project project) {
         return instanceList.computeIfAbsent(project, LamiaLineMarkerHandler::new);
@@ -49,6 +50,8 @@ public class LamiaLineMarkerHandler {
 
 
     private void showTip(String msg, MouseEvent event, PsiElement psiElement) {
+        LamiaLineMarkerHandler.psiElement = psiElement;
+
         PsiFile containingFile = psiElement.getContainingFile();
         Project project = psiElement.getProject();
         PsiDocumentManager documentManager = PsiDocumentManager.getInstance(project);
