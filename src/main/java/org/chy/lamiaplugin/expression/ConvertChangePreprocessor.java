@@ -1,12 +1,15 @@
 package org.chy.lamiaplugin.expression;
 
+import com.chy.lamia.expose.Lamia;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.PsiTreeChangeEventImpl;
 import com.intellij.psi.impl.PsiTreeChangePreprocessor;
+import com.intellij.psi.impl.file.impl.JavaFileManager;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
@@ -21,21 +24,16 @@ public class ConvertChangePreprocessor implements PsiTreeChangePreprocessor {
     public ConvertChangePreprocessor(Project project) {
         this.project = project;
 
-        Module module = ModuleManager.getInstance(project).getModules()[0];
-
-
-
-        PsiClass aClass = JavaPsiFacade.getInstance(project)
-                .findClass("com.chy.lamia.expose.Lamia", GlobalSearchScope.allScope(project));
-
-        Collection<PsiReference> all = ReferencesSearch.search(aClass).findAll();
-
-        Collection<VirtualFile> java = FilenameIndex.getAllFilesByExt(project, "java", GlobalSearchScope.moduleScope(module));
-        VirtualFile virtualFile = java.stream().findFirst().get();
-        PsiFile file = PsiManager.getInstance(project).findFile(virtualFile);
-        System.out.println(file);
-
+        DumbService.getInstance(project).smartInvokeLater(() -> {
+            PsiClass lamiaClass = JavaFileManager.getInstance(project).findClass(Lamia.class.getName(), GlobalSearchScope.allScope(project));
+            if (lamiaClass == null) {
+                return;
+            }
+            Collection<PsiReference> all = ReferencesSearch.search(lamiaClass).findAll();
+            System.out.println(all);
+        });
     }
+
 
     @Override
     public void treeChanged(@NotNull PsiTreeChangeEventImpl event) {
