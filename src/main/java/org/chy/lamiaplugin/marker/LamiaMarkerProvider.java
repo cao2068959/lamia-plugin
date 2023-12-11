@@ -1,8 +1,11 @@
 package org.chy.lamiaplugin.marker;
 
+import com.chy.lamia.convert.core.annotation.LamiaMapping;
+import com.chy.lamia.expose.Lamia;
 import com.intellij.codeInsight.daemon.LineMarkerInfo;
 import com.intellij.codeInsight.daemon.LineMarkerProvider;
 
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
 
 import org.jetbrains.annotations.NotNull;
@@ -10,9 +13,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class LamiaMarkerProvider implements LineMarkerProvider {
 
-    private static final String LAMIA_PATH = "com.chy.lamia.expose.Lamia";
+    private static final String LAMIA_PATH = Lamia.class.getName();
 
-    private static final String LAMIA_ANNOTATION_PATH = "com.chy.lamia.annotation.LamiaMapping";
+    private static final String LAMIA_ANNOTATION_PATH = LamiaMapping.class.getName();
 
 
     private static final String LAMIA_SHORT_PATH = "Lamia";
@@ -30,7 +33,7 @@ public class LamiaMarkerProvider implements LineMarkerProvider {
         }
 
         PsiElement leafElement = element.getFirstChild().getFirstChild().getLastChild();
-        return new LamiaLineMarkerInfo<>(leafElement);
+        return new LamiaLineMarkerInfo<>(leafElement, element);
     }
 
 

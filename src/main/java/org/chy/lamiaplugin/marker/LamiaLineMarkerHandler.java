@@ -8,10 +8,12 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.Balloon;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.psi.*;
+import com.intellij.psi.impl.file.impl.JavaFileManager;
 import com.intellij.ui.EditorTextField;
 import com.intellij.ui.LightweightHint;
 import com.intellij.ui.awt.RelativePoint;
 import com.intellij.ui.components.JBScrollPane;
+import org.chy.lamiaplugin.expression.LamiaExpressionManager;
 
 import java.awt.*;
 import java.awt.event.MouseEvent;
@@ -42,10 +44,8 @@ public class LamiaLineMarkerHandler {
 
     }
 
-    public void click(MouseEvent event, PsiElement psiElement) {
-        Project project = psiElement.getProject();
-        System.out.println("----> 点击");
-        showTip("出现----->", event, psiElement);
+    public void click(MouseEvent event, PsiElement psiElement, PsiElement lamiaMethod) {
+        showTip("出现----->", event, lamiaMethod);
     }
 
 
@@ -55,6 +55,11 @@ public class LamiaLineMarkerHandler {
         PsiFile containingFile = psiElement.getContainingFile();
         Project project = psiElement.getProject();
         PsiDocumentManager documentManager = PsiDocumentManager.getInstance(project);
+
+
+        LamiaExpressionManager lamiaExpressionManager = LamiaExpressionManager.getInstance(project);
+        lamiaExpressionManager.convert(psiElement);
+
 
         JavaCodeFragmentFactory fragmentFactory = JavaCodeFragmentFactory.getInstance(project);
 

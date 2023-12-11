@@ -47,8 +47,12 @@ public class LamiaLineMarkerInfo<T extends PsiElement> extends LineMarkerInfo<T>
     static Icon LAMIA_ICON = IconLoader.getIcon("/images/img_2.png", LamiaLineMarkerInfo.class);
 
 
-    public LamiaLineMarkerInfo(@NotNull T element) {
-        super(element, element.getTextRange(), LAMIA_ICON, (data) -> "Lamia转换语句", LamiaLineMarkerHandler.of(element.getProject())::click,
+    public LamiaLineMarkerInfo(@NotNull T element, T lamiaMethod) {
+        super(element, element.getTextRange(), LAMIA_ICON, (data) -> "Lamia转换语句",
+                (event,psiElement)-> {
+                    LamiaLineMarkerHandler handler = LamiaLineMarkerHandler.of(element.getProject());
+                    handler.click(event, psiElement, lamiaMethod);
+                },
                 GutterIconRenderer.Alignment.CENTER, () -> "LamiaMarkerInfo");
     }
 

@@ -6,6 +6,7 @@ import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.PsiTreeChangeEventImpl;
 import com.intellij.psi.impl.PsiTreeChangePreprocessor;
@@ -23,6 +24,7 @@ public class ConvertChangePreprocessor implements PsiTreeChangePreprocessor {
 
     public ConvertChangePreprocessor(Project project) {
         this.project = project;
+        new LamiaExpressionManager(project);
 
         DumbService.getInstance(project).smartInvokeLater(() -> {
             PsiClass lamiaClass = JavaFileManager.getInstance(project).findClass(Lamia.class.getName(), GlobalSearchScope.allScope(project));
@@ -32,6 +34,10 @@ public class ConvertChangePreprocessor implements PsiTreeChangePreprocessor {
             Collection<PsiReference> all = ReferencesSearch.search(lamiaClass).findAll();
             System.out.println(all);
         });
+    }
+
+    private void createdLamiaConvert() {
+
     }
 
 
