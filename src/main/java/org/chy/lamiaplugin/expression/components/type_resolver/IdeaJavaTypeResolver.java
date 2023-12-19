@@ -2,15 +2,15 @@ package org.chy.lamiaplugin.expression.components.type_resolver;
 
 import com.chy.lamia.convert.core.components.TypeResolver;
 import com.chy.lamia.convert.core.components.TypeResolverFactory;
-import com.chy.lamia.convert.core.entity.Constructor;
-import com.chy.lamia.convert.core.entity.Getter;
-import com.chy.lamia.convert.core.entity.Setter;
-import com.chy.lamia.convert.core.entity.TypeDefinition;
+import com.chy.lamia.convert.core.entity.*;
 import com.intellij.lang.jvm.JvmParameter;
+import com.intellij.lang.jvm.types.JvmType;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiType;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,12 +36,15 @@ public class IdeaJavaTypeResolver implements TypeResolver {
             if (setterVarName == null) {
                 continue;
             }
+            JvmParameter[] parameters = method.getParameters();
+            if (parameters.length != 1) {
+                continue;
+            }
             JvmParameter parameter = method.getParameters()[0];
-
             Setter setter = new Setter();
             setter.setVarName(setterVarName);
             setter.setMethodName(method.getName());
-            //setter.setType();
+            setter.setType(new TypeDefinition(convertType(parameter.getType()).getCanonicalText()));
             result.put(setterVarName, setter);
         }
 
@@ -52,7 +55,28 @@ public class IdeaJavaTypeResolver implements TypeResolver {
 
     @Override
     public List<Constructor> getConstructors() {
-        return null;
+        PsiMethod[] constructors = psiClass.getConstructors();
+        List<Constructor> result = new ArrayList<>();
+        for (PsiMethod constructor : constructors) {
+            Constructor cs = new Constructor();
+            cs.setParams(toVarDefinitions(constructor.getParameters()));
+            result.add(cs);
+        }
+
+        return result;
+    }
+
+    private List<VarDefinition> toVarDefinitions(JvmParameter[] parameters) {
+        if (parameters == null || parameters.length == 0) {
+            return new ArrayList<>();
+        }
+        List<VarDefinition> result = new ArrayList<>(parameters.length);
+        for (JvmParameter parameter : parameters) {
+            TypeDefinition typeDefinition = new TypeDefinition(convertType(parameter.getType()).getCanonicalText());
+            VarDefinition varDefinition = new VarDefinition(parameter.getName(), typeDefinition);
+            result.add(varDefinition);
+        }
+        return result;
     }
 
     @Override
@@ -65,10 +89,14 @@ public class IdeaJavaTypeResolver implements TypeResolver {
                 continue;
             }
             PsiType returnType = method.getReturnType();
+            if (returnType == null) {
+                continue;
+            }
+
             Getter getter = new Getter();
             getter.setVarName(getterVarName);
             getter.setMethodName(method.getName());
-            //setter.setType();
+            getter.setType(new TypeDefinition(returnType.getCanonicalText()));
             result.put(getterVarName, getter);
         }
         return result;
@@ -119,4 +147,8 @@ public class IdeaJavaTypeResolver implements TypeResolver {
         return c;
     }
 
+    public PsiType convertType(@NotNull JvmType type) {
+        if (type instanceof PsiType) return (PsiType) type;
+        throw new RuntimeException("TODO");
+    }
 }

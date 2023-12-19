@@ -1,10 +1,12 @@
 package org.chy.lamiaplugin.expression;
 
+import com.chy.lamia.convert.core.ConvertFactory;
 import com.chy.lamia.convert.core.components.ComponentFactory;
 import com.chy.lamia.convert.core.components.TreeFactory;
 import com.chy.lamia.convert.core.components.TypeResolverFactory;
 import com.chy.lamia.convert.core.components.entity.Expression;
 import com.chy.lamia.convert.core.components.entity.Statement;
+import com.chy.lamia.convert.core.entity.LamiaConvertInfo;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import org.chy.lamiaplugin.expression.components.StringExpression;
@@ -13,6 +15,7 @@ import org.chy.lamiaplugin.expression.components.StringTreeFactory;
 import org.chy.lamiaplugin.expression.components.type_resolver.IdeaJavaTypeResolverFactory;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class LamiaExpressionManager {
@@ -45,7 +48,8 @@ public class LamiaExpressionManager {
 
 
     public void convert(PsiElement psiElement) {
-        expressionResolver.resolving(psiElement);
+        LamiaConvertInfo lamiaConvertInfo = expressionResolver.resolving(psiElement);
+        List<Statement> makeResult = ConvertFactory.INSTANCE.make(lamiaConvertInfo);
 
     }
 }

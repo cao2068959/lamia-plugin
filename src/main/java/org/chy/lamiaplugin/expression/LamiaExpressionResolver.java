@@ -1,5 +1,7 @@
 package org.chy.lamiaplugin.expression;
 
+import cn.hutool.core.lang.Pair;
+import com.chy.lamia.convert.core.components.entity.Expression;
 import com.chy.lamia.convert.core.entity.LamiaConvertInfo;
 import com.chy.lamia.convert.core.entity.LamiaExpression;
 import com.chy.lamia.convert.core.entity.TypeDefinition;
@@ -18,14 +20,45 @@ public class LamiaExpressionResolver {
     public LamiaConvertInfo resolving(PsiElement psiElement) {
         LamiaConvertInfo result = new LamiaConvertInfo();
         PsiMethodCallExpression methodCall = (PsiMethodCallExpression) psiElement;
+        // 解析表lamia达式
+        Pair<LamiaExpression, PsiElement> lamiaExpressionAndLastSpi = parseMethod(methodCall, result);
+        if (lamiaExpressionAndLastSpi == null) {
+            return result;
+        }
+        result.setLamiaExpression(lamiaExpressionAndLastSpi.getKey());
 
-        LamiaExpression lamiaExpression = parseMethod(methodCall, result);
-        result.setLamiaExpression(lamiaExpression);
+        // 这里拿到的应该是最后一层的方法调用
+        PsiElement lastMethodCall = lamiaExpressionAndLastSpi.getValue();
+        // 如果设置了强转类型，那么去解析这个强转类型
+        TypeDefinition targetType = getCastTarget(lastMethodCall);
+        if (targetType != null){
+            result.setTargetType(targetType);
+        }
+
         return result;
 
     }
 
-    private LamiaExpression parseMethod(PsiMethodCallExpression methodCall, LamiaConvertInfo convertInfo) {
+    private TypeDefinition getCastTarget(PsiElement psiElement) {
+        PsiTypeCastExpression castExpression = getCastExpression(psiElement);
+        if (castExpression == null) {
+            return null;
+        }
+        PsiTypeElement castType = castExpression.getCastType();
+        if (castType == null) {
+            return null;
+        }
+        String canonicalText = castType.getType().getCanonicalText();
+        return new TypeDefinition(canonicalText);
+    }
+
+
+    /**
+     * 解析整个 lamia表达式
+     *
+     * @return key把整个表达式解析之后的结果，value 解析结束之后最后一层的方法，用于后续继续继续从这个表达式上面拿数据
+     */
+    private Pair<LamiaExpression, PsiElement> parseMethod(PsiMethodCallExpression methodCall, LamiaConvertInfo convertInfo) {
         String name = MethodCallUtils.getMethodName(methodCall);
         PsiMethodWrapper psiMethodWrapper = new PsiMethodWrapper(methodCall);
 
@@ -35,14 +68,14 @@ public class LamiaExpressionResolver {
             initPsiMethodWrapper(psiMethodWrapper, convertInfo);
             List<String> argsNames = psiMethodWrapper.useAllArgsToName();
             result.addSpreadArgs(argsNames, null);
-            return result;
+            return new Pair<>(result, methodCall);
         }
         if ("setField".equals(name)) {
             LamiaExpression result = new LamiaExpression();
             initPsiMethodWrapper(psiMethodWrapper, convertInfo);
             List<String> argsNames = psiMethodWrapper.useAllArgsToName();
             result.addArgs(argsNames);
-            return result;
+            return new Pair<>(result, methodCall);
         }
 
         if ("builder".equals(name)) {
@@ -52,7 +85,10 @@ public class LamiaExpressionResolver {
         return null;
     }
 
-    private LamiaExpression parseBuildConfig(PsiMethodWrapper psiMethodWrapper, LamiaConvertInfo convertInfo) {
+    /**
+     * 如果表达式 使用了 lamia.build 的方法，那么去解析整个 build chain 的数据
+     */
+    private Pair<LamiaExpression, PsiElement> parseBuildConfig(PsiMethodWrapper psiMethodWrapper, LamiaConvertInfo convertInfo) {
         LamiaExpression result = new LamiaExpression();
         // 创建配置解析器 准备开始解析
         ConfigParseContext context = new ConfigParseContext();
@@ -72,12 +108,29 @@ public class LamiaExpressionResolver {
 
             // 获取链式调用的下一个方法
             PsiMethodCallExpression psiMethodCallExpression = nextMethodCall(methodCallWrapper.getMethodCallExpression());
-            if (psiMethodCallExpression == null){
-                return result;
+            if (psiMethodCallExpression == null) {
+                // 如果是最后一个 call 有可能会去设置最终要转换的类型 如 Lamia.builder()....build(arg) , 这里将会把这个 arg设置
+                setTarget(convertInfo, methodCallWrapper);
+                return new Pair<>(result, methodCallWrapper.getMethodCallExpression());
             }
             methodCallWrapper = new PsiMethodWrapper(psiMethodCallExpression);
             initPsiMethodWrapper(methodCallWrapper, convertInfo);
         }
+    }
+
+
+    private void setTarget(LamiaConvertInfo convertInfo, PsiMethodWrapper methodCallWrapper) {
+        if (!"build".equals(methodCallWrapper.getName())) {
+            return;
+        }
+        Expression expression = methodCallWrapper.useOnlyArgs();
+        if (expression == null) {
+            return;
+        }
+        String target = expression.get().toString();
+        VarDefinition varDefinition = convertInfo.getArgs().get(target);
+        convertInfo.setTarget(varDefinition);
+        convertInfo.setTargetType(varDefinition.getType());
     }
 
     private void initPsiMethodWrapper(PsiMethodWrapper psiMethodWrapper, LamiaConvertInfo convertInfo) {
@@ -105,7 +158,22 @@ public class LamiaExpressionResolver {
             }
             psiElement = psiElement.getParent();
         }
+    }
 
+    private PsiTypeCastExpression getCastExpression(PsiElement data) {
+        PsiElement psiElement = data;
+        while (true) {
+            if (psiElement == null) {
+                return null;
+            }
+            if (psiElement instanceof PsiLocalVariable || psiElement instanceof PsiCodeBlock) {
+                return null;
+            }
+            if (psiElement instanceof PsiTypeCastExpression result) {
+                return result;
+            }
+            psiElement = psiElement.getParent();
+        }
     }
 
 
