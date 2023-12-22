@@ -3,8 +3,9 @@ package org.chy.lamiaplugin.expression.components;
 import com.chy.lamia.convert.core.components.TreeFactory;
 import com.chy.lamia.convert.core.components.entity.Expression;
 import com.chy.lamia.convert.core.components.entity.Statement;
+import org.chy.lamiaplugin.expression.components.statement.IfStatement;
+import org.chy.lamiaplugin.expression.components.statement.StringStatement;
 
-import java.util.Collections;
 import java.util.List;
 
 public class StringTreeFactory implements TreeFactory {
@@ -64,18 +65,10 @@ public class StringTreeFactory implements TreeFactory {
 
     @Override
     public Statement createIf(Expression judge, List<Statement> trueStatements, List<Statement> falseStatements) {
-        StringBuilder result = new StringBuilder();
-        String judgeStr = "if (" + judge + ") { \n";
-        result.append(judgeStr);
-        String trueStr = toString(trueStatements, 2);
-        result.append(trueStr);
-        if (falseStatements != null && !falseStatements.isEmpty()) {
-            result.append("} else { \n");
-            String falseStr = toString(falseStatements, 2);
-            result.append(falseStr);
-        }
-        result.append("} \n");
-        return new StringStatement(result.toString());
+        IfStatement result = new IfStatement(judge);
+        result.setTrueBlock(trueStatements);
+        result.setFalseBlock(falseStatements);
+        return result;
     }
 
     @Override
@@ -134,5 +127,13 @@ public class StringTreeFactory implements TreeFactory {
         return result.toString();
     }
 
+    /**
+     * 对 classpath 进行简写 比如 com.chy.User 只显示 User
+     *
+     * @return
+     */
+    private String classAbb(String classPath) {
+
+    }
 
 }

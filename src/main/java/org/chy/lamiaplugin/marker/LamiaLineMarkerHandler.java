@@ -1,5 +1,6 @@
 package org.chy.lamiaplugin.marker;
 
+import com.intellij.codeInsight.actions.ReformatCodeProcessor;
 import com.intellij.codeInsight.hint.HintManager;
 import com.intellij.ide.highlighter.JavaFileType;
 import com.intellij.openapi.application.ApplicationManager;
@@ -8,6 +9,9 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.Balloon;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.psi.*;
+import com.intellij.psi.codeStyle.CodeStyleManager;
+import com.intellij.psi.formatter.FormatterUtil;
+import com.intellij.psi.formatter.java.JavaFormatterUtil;
 import com.intellij.psi.impl.file.impl.JavaFileManager;
 import com.intellij.ui.EditorTextField;
 import com.intellij.ui.LightweightHint;
@@ -52,26 +56,28 @@ public class LamiaLineMarkerHandler {
     private void showTip(String msg, MouseEvent event, PsiElement psiElement) {
         LamiaLineMarkerHandler.psiElement = psiElement;
 
-        PsiFile containingFile = psiElement.getContainingFile();
+        PsiElement parentMethod = getSpiCodeBlock(psiElement);
         Project project = psiElement.getProject();
         PsiDocumentManager documentManager = PsiDocumentManager.getInstance(project);
 
-
+        // 用点击的表达式生成对应的转换语句
         LamiaExpressionManager lamiaExpressionManager = LamiaExpressionManager.getInstance(project);
-        lamiaExpressionManager.convert(psiElement);
+        String lamiaCode = lamiaExpressionManager.convert(psiElement);
 
 
+        // 把这个转换语句放入代码块中用于显示
         JavaCodeFragmentFactory fragmentFactory = JavaCodeFragmentFactory.getInstance(project);
+        JavaCodeFragment code = fragmentFactory.createCodeBlockCodeFragment(lamiaCode, parentMethod, true);
+        //code.addImportsFromString();
 
-        String a = "    @LamiaMapping\n" +
-                "    private WorkspaceClassVO toWorkspaceVO2(WorkspaceBO workspaceBO) {\n" +
-                "        return (WorkspaceClassVO) Lamia.mapping(workspaceBO);\n" +
-                "    }";
-        JavaCodeFragment code = fragmentFactory.createCodeBlockCodeFragment(a, containingFile, true);
+        // 对这个代码进行格式化
+        //CodeStyleManager codeStyleManager = CodeStyleManager.getInstance(project);
+        //codeStyleManager.reformat(code);
+
 
         Document document = documentManager.getDocument(code);
-        editorTextField.setDocument(document);
 
+        editorTextField.setDocument(document);
 
         //jbScrollPane.setPreferredSize(new Dimension(400, 300));
         //editorTextField.setToolTipText("fefdf");
@@ -88,5 +94,18 @@ public class LamiaLineMarkerHandler {
         //.show(new RelativePoint(event), Balloon.Position.below));
     }
 
+
+    private PsiElement getSpiCodeBlock(PsiElement psiElement) {
+        PsiElement data = psiElement.getParent();
+        while (true) {
+            if (data instanceof PsiCodeBlock method) {
+                return method;
+            }
+            if (data == null || data instanceof PsiClass || data instanceof PsiFile) {
+                return null;
+            }
+            data = data.getParent();
+        }
+    }
 
 }
