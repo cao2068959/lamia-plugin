@@ -43,6 +43,12 @@ public class ConvertChangePreprocessor implements PsiTreeChangePreprocessor {
 
     @Override
     public void treeChanged(@NotNull PsiTreeChangeEventImpl event) {
+        if (event.getCode() != PsiTreeChangeEventImpl.PsiEventType.CHILDREN_CHANGED){
+            return;
+        }
+        // 发生变更之后执行
+
+
         System.out.println(event);
     }
 }

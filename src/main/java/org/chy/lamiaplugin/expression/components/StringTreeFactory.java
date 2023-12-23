@@ -13,13 +13,13 @@ public class StringTreeFactory implements TreeFactory {
     @Override
     public Expression newClass(String classPath, List<Expression> newInstanceParam) {
         String param = param(newInstanceParam);
-        return new StringExpression("new " + classPath + "(" + param + ")");
+        return new StringExpression("new " + classAbb(classPath) + "(" + param + ")");
     }
 
     @Override
     public Statement createVar(String instantName, String classPath, Expression newClass) {
         String value = toString(newClass);
-        return new StringStatement(classPath + " " + instantName + " = " + value);
+        return new StringStatement(classAbb(classPath) + " " + instantName + " = " + value);
     }
 
     @Override
@@ -60,7 +60,7 @@ public class StringTreeFactory implements TreeFactory {
     public Expression typeCast(String classPath, Expression expression) {
         String instant = toString(expression);
 
-        return new StringExpression("(" + classPath + ")" + instant);
+        return new StringExpression("(" + classAbb(classPath) + ")" + instant);
     }
 
     @Override
@@ -133,7 +133,10 @@ public class StringTreeFactory implements TreeFactory {
      * @return
      */
     private String classAbb(String classPath) {
-
+        int index = classPath.lastIndexOf('.');
+        if (index < 0) {
+            return classPath;
+        }
+        return classPath.substring(index + 1);
     }
-
 }

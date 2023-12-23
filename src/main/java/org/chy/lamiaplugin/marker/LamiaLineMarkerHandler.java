@@ -1,18 +1,25 @@
 package org.chy.lamiaplugin.marker;
 
+import com.chy.lamia.utils.Lists;
 import com.intellij.codeInsight.actions.ReformatCodeProcessor;
 import com.intellij.codeInsight.hint.HintManager;
+import com.intellij.compiler.server.BuildManager;
 import com.intellij.ide.highlighter.JavaFileType;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.compiler.CompilerManager;
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.Balloon;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.formatter.java.JavaFormatterUtil;
 import com.intellij.psi.impl.file.impl.JavaFileManager;
+import com.intellij.psi.javadoc.JavadocManager;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.ui.EditorTextField;
 import com.intellij.ui.LightweightHint;
 import com.intellij.ui.awt.RelativePoint;
@@ -21,6 +28,7 @@ import org.chy.lamiaplugin.expression.LamiaExpressionManager;
 
 import java.awt.*;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -63,7 +71,15 @@ public class LamiaLineMarkerHandler {
         // 用点击的表达式生成对应的转换语句
         LamiaExpressionManager lamiaExpressionManager = LamiaExpressionManager.getInstance(project);
         String lamiaCode = lamiaExpressionManager.convert(psiElement);
+        PsiFile psiFile;
+        PsiClass psiClass = JavaFileManager.getInstance(project).findClass("com.chy.User", GlobalSearchScope.allScope(project));
+        VirtualFile virtualFile = psiClass.getContainingFile().getVirtualFile();
 
+
+        // 告诉编译器哪一些类发生了变动需要重新编译
+       //BuildManager.getInstance().notifyFilesChanged(Lists.of(new File(canonicalPath)));
+
+        //CompilerManager.getInstance(project).compile();
 
         // 把这个转换语句放入代码块中用于显示
         JavaCodeFragmentFactory fragmentFactory = JavaCodeFragmentFactory.getInstance(project);
@@ -78,10 +94,6 @@ public class LamiaLineMarkerHandler {
         Document document = documentManager.getDocument(code);
 
         editorTextField.setDocument(document);
-
-        //jbScrollPane.setPreferredSize(new Dimension(400, 300));
-        //editorTextField.setToolTipText("fefdf");
-        //editorTextField.setText("12312312312\n 12312312312\n 地方额黑胡椒大石街道手机打·1\n");
 
 
         ApplicationManager.getApplication().invokeLater(() -> {

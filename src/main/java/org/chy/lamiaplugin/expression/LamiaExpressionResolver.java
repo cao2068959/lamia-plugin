@@ -31,8 +31,13 @@ public class LamiaExpressionResolver {
         PsiElement lastMethodCall = lamiaExpressionAndLastSpi.getValue();
         // 如果设置了强转类型，那么去解析这个强转类型
         TypeDefinition targetType = getCastTarget(lastMethodCall);
-        if (targetType != null){
+        if (targetType != null) {
             result.setTargetType(targetType);
+        }
+
+        PsiLocalVariable localVariable = getLocalVariable(lastMethodCall);
+        if (localVariable != null) {
+            result.setVarName(localVariable.getName());
         }
 
         return result;
@@ -170,6 +175,22 @@ public class LamiaExpressionResolver {
                 return null;
             }
             if (psiElement instanceof PsiTypeCastExpression result) {
+                return result;
+            }
+            psiElement = psiElement.getParent();
+        }
+    }
+
+    private PsiLocalVariable getLocalVariable(PsiElement data) {
+        PsiElement psiElement = data;
+        while (true) {
+            if (psiElement == null) {
+                return null;
+            }
+            if (psiElement instanceof PsiCodeBlock) {
+                return null;
+            }
+            if (psiElement instanceof PsiLocalVariable result) {
                 return result;
             }
             psiElement = psiElement.getParent();
