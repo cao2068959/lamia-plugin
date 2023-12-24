@@ -26,6 +26,11 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
+<!--
+        <fileBasedIndex implementation="org.chy.lamiaplugin.components.MyBusinessDataIndex"/>
+-->
+
+
         <ApplicationLoadListener implementation="org.chy.lamiaplugin.LamiaPluginApplicationLoadListener"></ApplicationLoadListener>
 
         <projectService serviceImplementation="org.chy.lamiaplugin.expression.LamiaExpressionManager"/>

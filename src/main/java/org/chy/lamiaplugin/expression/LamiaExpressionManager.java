@@ -1,5 +1,6 @@
 package org.chy.lamiaplugin.expression;
 
+import cn.hutool.core.collection.ConcurrentHashSet;
 import com.chy.lamia.convert.core.ConvertFactory;
 import com.chy.lamia.convert.core.components.ComponentFactory;
 import com.chy.lamia.convert.core.components.NameHandler;
@@ -10,6 +11,8 @@ import com.chy.lamia.convert.core.components.entity.Statement;
 import com.chy.lamia.convert.core.entity.LamiaConvertInfo;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.spi.psi.SPIFile;
 import org.chy.lamiaplugin.expression.components.SimpleNameHandler;
 import org.chy.lamiaplugin.expression.components.StringExpression;
 import org.chy.lamiaplugin.expression.components.statement.StringStatement;
@@ -19,12 +22,16 @@ import org.chy.lamiaplugin.expression.components.type_resolver.IdeaJavaTypeResol
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class LamiaExpressionManager {
 
     Project project;
 
     static Map<Project, LamiaExpressionManager> instances = new HashMap<>();
+
+    private Map<String, Set<PsiFile>> dependentCache = new ConcurrentHashMap<>();
 
     LamiaExpressionResolver expressionResolver = new LamiaExpressionResolver();
 
@@ -69,5 +76,13 @@ public class LamiaExpressionManager {
             return stringStatement.getStatement(0);
         }
         return statement.get() + ";";
+    }
+
+    public void addDependent(String classpath, PsiFile psiFile) {
+        if (classpath == null) {
+            return;
+        }
+        Set<PsiFile> psiFiles = dependentCache.computeIfAbsent(classpath, k -> new ConcurrentHashSet<>());
+        psiFiles.add(psiFile);
     }
 }
