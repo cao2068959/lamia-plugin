@@ -44,7 +44,7 @@ import java.awt.event.MouseEvent;
 public class LamiaLineMarkerInfo<T extends PsiElement> extends LineMarkerInfo<T> {
 
 
-    static Icon LAMIA_ICON = IconLoader.getIcon("/images/img_2.png", LamiaLineMarkerInfo.class);
+    static Icon LAMIA_ICON = IconLoader.getIcon("/images/img_1.png", LamiaLineMarkerInfo.class);
 
 
     public LamiaLineMarkerInfo(@NotNull T element, T lamiaMethod) {

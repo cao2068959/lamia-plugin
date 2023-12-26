@@ -3,6 +3,7 @@ package org.chy.lamiaplugin;
 import com.chy.lamia.expose.Lamia;
 import com.intellij.ide.ApplicationLoadListener;
 import com.intellij.openapi.application.Application;
+import com.intellij.psi.PsiManager;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;

@@ -18,6 +18,7 @@ import org.chy.lamiaplugin.expression.components.StringExpression;
 import org.chy.lamiaplugin.expression.components.statement.StringStatement;
 import org.chy.lamiaplugin.expression.components.StringTreeFactory;
 import org.chy.lamiaplugin.expression.components.type_resolver.IdeaJavaTypeResolverFactory;
+import org.chy.lamiaplugin.expression.entity.DependentWrapper;
 
 import java.util.HashMap;
 import java.util.List;
@@ -31,7 +32,7 @@ public class LamiaExpressionManager {
 
     static Map<Project, LamiaExpressionManager> instances = new HashMap<>();
 
-    private Map<String, Set<PsiFile>> dependentCache = new ConcurrentHashMap<>();
+    private Map<String, Map<PsiFile, DependentWrapper>> dependentCache = new ConcurrentHashMap<>();
 
     LamiaExpressionResolver expressionResolver = new LamiaExpressionResolver();
 
@@ -82,7 +83,11 @@ public class LamiaExpressionManager {
         if (classpath == null) {
             return;
         }
-        Set<PsiFile> psiFiles = dependentCache.computeIfAbsent(classpath, k -> new ConcurrentHashSet<>());
-        psiFiles.add(psiFile);
+        Map<PsiFile, DependentWrapper> dependentWrapperMap = dependentCache
+                .computeIfAbsent(classpath, k -> new ConcurrentHashMap<>());
+
+        DependentWrapper dependentWrapper = dependentWrapperMap.computeIfAbsent(psiFile, key-> new DependentWrapper(psiFile));
+        dependentWrapper.increment();
+
     }
 }
