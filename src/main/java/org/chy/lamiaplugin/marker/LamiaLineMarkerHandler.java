@@ -70,7 +70,7 @@ public class LamiaLineMarkerHandler {
 
         // 用点击的表达式生成对应的转换语句
         LamiaExpressionManager lamiaExpressionManager = LamiaExpressionManager.getInstance(project);
-        String lamiaCode = lamiaExpressionManager.convert(psiElement);
+        String lamiaCode = lamiaExpressionManager.convert((PsiMethodCallExpression) psiElement);
         PsiFile psiFile;
         PsiClass psiClass = JavaFileManager.getInstance(project).findClass("com.chy.User", GlobalSearchScope.allScope(project));
         VirtualFile virtualFile = psiClass.getContainingFile().getVirtualFile();

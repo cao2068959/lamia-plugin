@@ -17,9 +17,8 @@ import java.util.List;
 
 public class LamiaExpressionResolver {
 
-    public LamiaConvertInfo resolving(PsiElement psiElement) {
+    public LamiaConvertInfo resolving(PsiMethodCallExpression methodCall) {
         LamiaConvertInfo result = new LamiaConvertInfo();
-        PsiMethodCallExpression methodCall = (PsiMethodCallExpression) psiElement;
         // 解析表lamia达式
         Pair<LamiaExpression, PsiElement> lamiaExpressionAndLastSpi = parseMethod(methodCall, result);
         if (lamiaExpressionAndLastSpi == null) {

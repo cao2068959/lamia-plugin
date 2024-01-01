@@ -68,6 +68,69 @@ public class PsiMethodUtils {
         return null;
     }
 
+    /**
+     * 向上找，直到找到方法调用
+     *
+     * @param psiElement
+     * @return
+     */
+    public static PsiMethodCallExpression getMethodCall(PsiElement psiElement) {
+        PsiElement data = psiElement;
+        while (true) {
+            if (data instanceof PsiMethodCallExpression result) {
+                return result;
+            }
+            if (data == null || data instanceof PsiMethod || data instanceof PsiStatement || data instanceof PsiClass || data instanceof PsiFile) {
+                return null;
+            }
+            data = data.getParent();
+        }
+    }
+
+    /**
+     * 获取 Lamia 的开始表达式 如 Lamia.build() 这样的
+     *
+     * @param methodCallExpression
+     * @return
+     */
+    public static PsiMethodCallExpression getLamiaStartExpression(PsiMethodCallExpression methodCallExpression) {
+
+        PsiMethodCallExpression nextMethod = methodCallExpression;
+        PsiElement cache = methodCallExpression;
+
+
+        while (true) {
+            PsiElement psiElement = getReferenceOrMethodCallByChildren(cache);
+            if (psiElement == null) {
+                return null;
+            }
+            cache = psiElement;
+
+            if (psiElement instanceof PsiMethodCallExpression methodCall) {
+                nextMethod = methodCall;
+                continue;
+            }
+            String text = psiElement.getText();
+            if ("Lamia".equals(text)) {
+                return nextMethod;
+            }
+        }
+    }
+
+    private static PsiElement getReferenceOrMethodCallByChildren(PsiElement psiElement) {
+        PsiElement[] children = psiElement.getChildren();
+        for (PsiElement child : children) {
+            if (child instanceof PsiReferenceExpression result) {
+                return result;
+            }
+            if (child instanceof PsiMethodCallExpression result) {
+                return result;
+            }
+        }
+        return null;
+    }
+
+
     public static PsiElement getCompleteExpression(PsiElement refExpr) {
         PsiElement result = refExpr;
 

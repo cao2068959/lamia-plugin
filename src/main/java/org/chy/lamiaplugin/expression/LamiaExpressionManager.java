@@ -12,13 +12,15 @@ import com.chy.lamia.convert.core.entity.LamiaConvertInfo;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.spi.psi.SPIFile;
+import com.intellij.psi.PsiMethodCallExpression;
 import org.chy.lamiaplugin.expression.components.SimpleNameHandler;
 import org.chy.lamiaplugin.expression.components.StringExpression;
 import org.chy.lamiaplugin.expression.components.statement.StringStatement;
 import org.chy.lamiaplugin.expression.components.StringTreeFactory;
 import org.chy.lamiaplugin.expression.components.type_resolver.IdeaJavaTypeResolverFactory;
 import org.chy.lamiaplugin.expression.entity.DependentWrapper;
+import org.chy.lamiaplugin.expression.entity.LamiaExpression;
+import org.chy.lamiaplugin.expression.entity.RelationClassWrapper;
 
 import java.util.HashMap;
 import java.util.List;
@@ -32,7 +34,16 @@ public class LamiaExpressionManager {
 
     static Map<Project, LamiaExpressionManager> instances = new HashMap<>();
 
-    private Map<String, Map<PsiFile, DependentWrapper>> dependentCache = new ConcurrentHashMap<>();
+    /**
+     * 被lamia表达式生成了表达式的类 的关联关系，key：依赖到的类的全路径，value：具体使用到的字段以及对应的表达式本身
+     */
+    private Map<String, Set<RelationClassWrapper>> relationsCache = new ConcurrentHashMap<>();
+
+    /**
+     * 反向的依赖关系 key：lamia的表达式本身， value：这个表达式 涉及到的类以及对应的字段
+     */
+    private Map<LamiaExpression, Set<RelationClassWrapper>> reverseRelationsCache = new ConcurrentHashMap<>();
+
 
     LamiaExpressionResolver expressionResolver = new LamiaExpressionResolver();
 
@@ -58,10 +69,15 @@ public class LamiaExpressionManager {
     }
 
 
-    public String convert(PsiElement psiElement) {
+    public String convert(PsiMethodCallExpression psiElement) {
         LamiaConvertInfo lamiaConvertInfo = expressionResolver.resolving(psiElement);
         List<Statement> makeResult = ConvertFactory.INSTANCE.make(lamiaConvertInfo);
         return convertString(makeResult);
+    }
+
+    public Map<String, Set<String>> getParticipateVar(PsiMethodCallExpression psiElement) {
+        LamiaConvertInfo lamiaConvertInfo = expressionResolver.resolving(psiElement);
+        return ConvertFactory.INSTANCE.getParticipateVar(lamiaConvertInfo);
     }
 
     private String convertString(List<Statement> statements) {
@@ -79,15 +95,16 @@ public class LamiaExpressionManager {
         return statement.get() + ";";
     }
 
-    public void addDependent(String classpath, PsiFile psiFile) {
-        if (classpath == null) {
-            return;
+
+    public void addRelations(RelationClassWrapper relationClassWrapper) {
+        LamiaExpression lamiaExpression = relationClassWrapper.getLamiaExpression();
+        if (lamiaExpression == null) {
+            throw new RuntimeException("无效的参数 [relationClassWrapper: " + relationClassWrapper.getClassPath() + "] 中 lamiaExpression 不能为null");
         }
-        Map<PsiFile, DependentWrapper> dependentWrapperMap = dependentCache
-                .computeIfAbsent(classpath, k -> new ConcurrentHashMap<>());
+        String classPath = relationClassWrapper.getClassPath();
 
-        DependentWrapper dependentWrapper = dependentWrapperMap.computeIfAbsent(psiFile, key-> new DependentWrapper(psiFile));
-        dependentWrapper.increment();
-
+        relationsCache.computeIfAbsent(classPath, __ -> new ConcurrentHashSet<>()).add(relationClassWrapper);
+        reverseRelationsCache.computeIfAbsent(lamiaExpression, __ -> new ConcurrentHashSet<>()).add(relationClassWrapper);
     }
+
 }
