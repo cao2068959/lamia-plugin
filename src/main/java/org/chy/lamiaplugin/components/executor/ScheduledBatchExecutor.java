@@ -65,7 +65,6 @@ public class ScheduledBatchExecutor implements Runnable {
 
     private void doRun() throws InterruptedException {
         Map<BatchExecutor, List<Event>> batchExecutorListMap = readData();
-        LOG.info("dddddddddddddddddd");
         batchExecutorListMap.forEach(BatchExecutor::batchRun);
     }
 

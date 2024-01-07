@@ -3,6 +3,10 @@ package org.chy.lamiaplugin.utlis;
 import com.chy.lamia.convert.core.annotation.LamiaMapping;
 import com.chy.lamia.expose.Lamia;
 import com.intellij.psi.*;
+import org.w3c.dom.stylesheets.LinkStyle;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class PsiMethodUtils {
 
@@ -65,6 +69,31 @@ public class PsiMethodUtils {
                 return methodCallExpression;
             }
         }
+        return null;
+    }
+
+    public static PsiMethodCallExpression getMethodCallExpressionFromChildren(PsiElement psiElement, int deep) {
+        if (psiElement instanceof PsiMethodCallExpression methodCallExpression) {
+            return methodCallExpression;
+        }
+        PsiElement[] children = psiElement.getChildren();
+
+        List<PsiElement> next = new ArrayList<>();
+        for (PsiElement child : children) {
+            if (child instanceof PsiMethodCallExpression methodCallExpression) {
+                return methodCallExpression;
+            }
+            next.add(child);
+        }
+        if (deep > 0) {
+            for (PsiElement psiElement1 : next) {
+                PsiMethodCallExpression methodCallExpressionFromChildren = getMethodCallExpressionFromChildren(psiElement1, deep - 1);
+                if (methodCallExpressionFromChildren != null) {
+                    return methodCallExpressionFromChildren;
+                }
+            }
+        }
+
         return null;
     }
 

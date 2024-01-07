@@ -40,8 +40,6 @@ public class LamiaExpressionChangeExecutor implements BatchExecutor<LamiaExpress
             }
         }
 
-
-
         // 开始重新处理表达式
         LOG.info("执行---->");
 

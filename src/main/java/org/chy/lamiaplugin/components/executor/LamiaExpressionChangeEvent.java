@@ -7,10 +7,13 @@ public class LamiaExpressionChangeEvent extends Event {
 
     PsiMethodCallExpression LamiaExpression;
 
+    ChangeType type;
 
-    public LamiaExpressionChangeEvent(PsiMethodCallExpression lamiaExpression) {
+
+    public LamiaExpressionChangeEvent(PsiMethodCallExpression lamiaExpression, ChangeType type) {
         super("LamiaExpressionChangeExecutor");
         this.LamiaExpression = lamiaExpression;
+        this.type = type;
     }
 
 
