@@ -27,6 +27,7 @@ public class PsiMethodWrapper extends MethodWrapper {
             return;
         }
 
+
         Set<PsiVariable> methodCallParam = VariableAccessUtils.collectUsedVariables(paramExpression);
         List<ArgWrapper> arg = methodCallParam.stream().map(psiVariable -> {
             PsiArgWrapper psiArgWrapper = new PsiArgWrapper();
