@@ -14,6 +14,7 @@ import com.siyeh.ig.psiutils.MethodCallUtils;
 import org.chy.lamiaplugin.expression.entity.PsiMethodWrapper;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 public class LamiaExpressionResolver {
 
@@ -38,9 +39,16 @@ public class LamiaExpressionResolver {
         if (localVariable != null) {
             result.setVarName(localVariable.getName());
         }
-
         return result;
+    }
 
+    public LamiaConvertInfo resolving(PsiMethodCallExpression methodCall, Consumer<Exception> exceptionConsumer) {
+        try {
+            return resolving(methodCall);
+        } catch (Exception e) {
+            exceptionConsumer.accept(e);
+            return null;
+        }
     }
 
     private TypeDefinition getCastTarget(PsiElement psiElement) {

@@ -9,10 +9,13 @@ import com.chy.lamia.convert.core.components.TypeResolverFactory;
 import com.chy.lamia.convert.core.components.entity.Expression;
 import com.chy.lamia.convert.core.components.entity.Statement;
 import com.chy.lamia.convert.core.entity.LamiaConvertInfo;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiMethodCallExpression;
+import org.chy.lamiaplugin.components.executor.ScheduledBatchExecutor;
+import org.chy.lamiaplugin.exception.LamiaConvertException;
 import org.chy.lamiaplugin.expression.components.SimpleNameHandler;
 import org.chy.lamiaplugin.expression.components.StringExpression;
 import org.chy.lamiaplugin.expression.components.statement.StringStatement;
@@ -47,6 +50,8 @@ public class LamiaExpressionManager {
 
     LamiaExpressionResolver expressionResolver = new LamiaExpressionResolver();
 
+    private static final Logger LOG = Logger.getInstance(LamiaExpressionManager.class);
+
     public static LamiaExpressionManager getInstance(Project project) {
 
         return instances.get(project);
@@ -69,16 +74,39 @@ public class LamiaExpressionManager {
     }
 
 
-    public String convert(PsiMethodCallExpression psiElement) {
-        LamiaConvertInfo lamiaConvertInfo = expressionResolver.resolving(psiElement);
-        List<Statement> makeResult = ConvertFactory.INSTANCE.make(lamiaConvertInfo);
-        return convertString(makeResult);
+    public ConvertResult convert(PsiMethodCallExpression psiElement) {
+
+        try {
+            LamiaConvertInfo lamiaConvertInfo = expressionResolver.resolving(psiElement, e -> {
+                LOG.warn("解析表达式失败", e);
+                throw new LamiaConvertException("Parsing expression failed!!");
+            });
+            List<Statement> makeResult = ConvertFactory.INSTANCE.make(lamiaConvertInfo);
+            return ConvertResult.success(convertString(makeResult));
+
+        } catch (Exception e) {
+            String failMsg;
+            if (e instanceof LamiaConvertException convertException) {
+                failMsg = convertException.getMessage();
+            } else {
+                LOG.warn("表达式生成异常", e);
+                failMsg = "Generate conversion code exception";
+            }
+            return ConvertResult.fail(failMsg);
+        }
+
     }
 
     public Map<String, Set<String>> getParticipateVar(PsiMethodCallExpression psiElement) {
-        LamiaConvertInfo lamiaConvertInfo = expressionResolver.resolving(psiElement);
-        return ConvertFactory.INSTANCE.getParticipateVar(lamiaConvertInfo);
+
+        try {
+            LamiaConvertInfo lamiaConvertInfo = expressionResolver.resolving(psiElement);
+            return ConvertFactory.INSTANCE.getParticipateVar(lamiaConvertInfo);
+        } catch (Exception e) {
+            return new HashMap<>();
+        }
     }
+
 
     private String convertString(List<Statement> statements) {
         StringBuilder result = new StringBuilder();

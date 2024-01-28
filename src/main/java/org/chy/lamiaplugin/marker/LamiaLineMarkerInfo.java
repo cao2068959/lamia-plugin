@@ -1,5 +1,6 @@
 package org.chy.lamiaplugin.marker;
 
+import com.intellij.codeInsight.daemon.GutterIconNavigationHandler;
 import com.intellij.codeInsight.daemon.LineMarkerInfo;
 import com.intellij.codeInsight.hint.HintManager;
 import com.intellij.codeInsight.navigation.NavigationGutterIconBuilder;
@@ -21,6 +22,7 @@ import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.ui.popup.ListPopup;
 import com.intellij.openapi.util.IconLoader;
 
+import com.intellij.openapi.util.NlsContexts;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
 
@@ -45,16 +47,29 @@ public class LamiaLineMarkerInfo<T extends PsiElement> extends LineMarkerInfo<T>
 
 
     static Icon LAMIA_ICON = IconLoader.getIcon("/images/img_1.png", LamiaLineMarkerInfo.class);
+    private T lamiaMethod;
 
 
     public LamiaLineMarkerInfo(@NotNull T element, T lamiaMethod) {
         super(element, element.getTextRange(), LAMIA_ICON, (data) -> "Lamia转换语句",
-                (event,psiElement)-> {
-                    LamiaLineMarkerHandler handler = LamiaLineMarkerHandler.of(element.getProject());
-                    handler.click(event, psiElement, lamiaMethod);
-                },
+                null,
                 GutterIconRenderer.Alignment.CENTER, () -> "LamiaMarkerInfo");
+        this.lamiaMethod = lamiaMethod;
     }
 
+    public GutterIconNavigationHandler<T> getNavigationHandler() {
+        return (event, psiElement) -> {
+            T method = getLamiaMethod();
+            LamiaLineMarkerHandler handler = LamiaLineMarkerHandler.of(method.getProject());
+            handler.click(event, method);
+        };
+    }
 
+    public void setLamiaMethod(T lamiaMethod) {
+        this.lamiaMethod = lamiaMethod;
+    }
+
+    public T getLamiaMethod() {
+        return lamiaMethod;
+    }
 }

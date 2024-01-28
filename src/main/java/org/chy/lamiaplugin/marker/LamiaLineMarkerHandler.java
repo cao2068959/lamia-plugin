@@ -24,6 +24,7 @@ import com.intellij.ui.EditorTextField;
 import com.intellij.ui.LightweightHint;
 import com.intellij.ui.awt.RelativePoint;
 import com.intellij.ui.components.JBScrollPane;
+import org.chy.lamiaplugin.expression.ConvertResult;
 import org.chy.lamiaplugin.expression.LamiaExpressionManager;
 
 import java.awt.*;
@@ -56,7 +57,7 @@ public class LamiaLineMarkerHandler {
 
     }
 
-    public void click(MouseEvent event, PsiElement psiElement, PsiElement lamiaMethod) {
+    public void click(MouseEvent event, PsiElement lamiaMethod) {
         showTip("出现----->", event, lamiaMethod);
     }
 
@@ -70,16 +71,19 @@ public class LamiaLineMarkerHandler {
 
         // 用点击的表达式生成对应的转换语句
         LamiaExpressionManager lamiaExpressionManager = LamiaExpressionManager.getInstance(project);
-        String lamiaCode = lamiaExpressionManager.convert((PsiMethodCallExpression) psiElement);
-        PsiFile psiFile;
-        PsiClass psiClass = JavaFileManager.getInstance(project).findClass("com.chy.User", GlobalSearchScope.allScope(project));
-        VirtualFile virtualFile = psiClass.getContainingFile().getVirtualFile();
-
+        ConvertResult lamiaConvertResult = lamiaExpressionManager.convert((PsiMethodCallExpression) psiElement);
 
         // 告诉编译器哪一些类发生了变动需要重新编译
-       //BuildManager.getInstance().notifyFilesChanged(Lists.of(new File(canonicalPath)));
+        //BuildManager.getInstance().notifyFilesChanged(Lists.of(new File(canonicalPath)));
 
         //CompilerManager.getInstance(project).compile();
+
+        String lamiaCode;
+        if (lamiaConvertResult.isSuccess()) {
+            lamiaCode = lamiaConvertResult.getData();
+        } else {
+            lamiaCode = lamiaConvertResult.getMsg();
+        }
 
         // 把这个转换语句放入代码块中用于显示
         JavaCodeFragmentFactory fragmentFactory = JavaCodeFragmentFactory.getInstance(project);
