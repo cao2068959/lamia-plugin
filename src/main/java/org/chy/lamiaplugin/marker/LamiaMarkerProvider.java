@@ -42,30 +42,8 @@ public class LamiaMarkerProvider implements LineMarkerProvider {
         if (!isLamiaExpressionMethodCall(methodCallExpression)) {
             return null;
         }
-
-
         PsiElement leafElement = element.getFirstChild().getFirstChild().getLastChild();
         LamiaLineMarkerInfo<PsiElement> marker = new LamiaLineMarkerInfo<>(leafElement, element);
-
-
-        Project project = element.getProject();
-
-        PsiDocumentManager documentManager = PsiDocumentManager.getInstance(project);
-        Document document = documentManager.getDocument(element.getContainingFile());
-
-        MarkupModelEx markupModel = (MarkupModelEx) DocumentMarkupModel.forDocument(document, project, true);
-        markupModel.processRangeHighlightersOverlappingWith(marker.startOffset, marker.endOffset,
-                highlighter -> {
-                    Key<LineMarkerInfo<?>> lineMarkerInfo1 = (Key<LineMarkerInfo<?>>) ReflectUtil.getStaticFieldValue(ReflectUtil.getField(LineMarkersUtil.class, "LINE_MARKER_INFO"));
-
-                    // 获取 LineMarkerInfo
-                    LineMarkerInfo<PsiElement> info = (LineMarkerInfo<PsiElement>) highlighter.getUserData(lineMarkerInfo1);
-
-                    if (info instanceof LamiaLineMarkerInfo<PsiElement> lineMarkerInfo) {
-                        lineMarkerInfo.setLamiaMethod(element);
-                    }
-                    return true;
-                });
         return marker;
     }
 

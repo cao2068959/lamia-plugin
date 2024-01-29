@@ -35,7 +35,7 @@ public class LamiaExpressionManager {
 
     Project project;
 
-    static Map<Project, LamiaExpressionManager> instances = new HashMap<>();
+    static Map<Project, LamiaExpressionManager> instances = new ConcurrentHashMap<>();
 
     /**
      * 被lamia表达式生成了表达式的类 的关联关系，key：依赖到的类的全路径，value：具体使用到的字段以及对应的表达式本身
@@ -53,14 +53,22 @@ public class LamiaExpressionManager {
     private static final Logger LOG = Logger.getInstance(LamiaExpressionManager.class);
 
     public static LamiaExpressionManager getInstance(Project project) {
-
-        return instances.get(project);
+        LamiaExpressionManager lamiaExpressionManager = instances.get(project);
+        if (lamiaExpressionManager == null) {
+            synchronized (LamiaExpressionManager.class) {
+                lamiaExpressionManager = instances.get(project);
+                if (lamiaExpressionManager == null) {
+                    lamiaExpressionManager = new LamiaExpressionManager(project);
+                    instances.put(project, lamiaExpressionManager);
+                }
+            }
+        }
+        return lamiaExpressionManager;
     }
 
 
-    public LamiaExpressionManager(Project project) {
+    private LamiaExpressionManager(Project project) {
         this.project = project;
-        instances.put(project, this);
         registerLamiaComponents();
     }
 

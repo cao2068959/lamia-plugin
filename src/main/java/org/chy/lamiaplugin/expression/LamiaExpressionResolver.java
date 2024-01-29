@@ -42,6 +42,13 @@ public class LamiaExpressionResolver {
         return result;
     }
 
+    /**
+     * 仅仅去解析整个lamia表达式
+     *
+     * @param methodCall        要解析的表达式
+     * @param exceptionConsumer 如果异常如何处理
+     * @return
+     */
     public LamiaConvertInfo resolving(PsiMethodCallExpression methodCall, Consumer<Exception> exceptionConsumer) {
         try {
             return resolving(methodCall);
@@ -123,6 +130,10 @@ public class LamiaExpressionResolver {
             if (psiMethodCallExpression == null) {
                 // 如果是最后一个 call 有可能会去设置最终要转换的类型 如 Lamia.builder()....build(arg) , 这里将会把这个 arg设置
                 setTarget(convertInfo, methodCallWrapper);
+                // 没有结束，但是已经无法继续往下解析了，说明表达式可能不完整
+                if (!context.isEnd()) {
+                    result.setParseComplete(false);
+                }
                 return new Pair<>(result, methodCallWrapper.getMethodCallExpression());
             }
             methodCallWrapper = new PsiMethodWrapper(psiMethodCallExpression);

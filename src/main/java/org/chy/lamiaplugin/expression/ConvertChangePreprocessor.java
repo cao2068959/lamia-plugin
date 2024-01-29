@@ -37,7 +37,7 @@ public class ConvertChangePreprocessor implements PsiTreeChangePreprocessor {
 
     public ConvertChangePreprocessor(Project project) {
         this.project = project;
-        this.lamiaExpressionManager = new LamiaExpressionManager(project);
+        this.lamiaExpressionManager = LamiaExpressionManager.getInstance(project);
 
         DumbService.getInstance(project).smartInvokeLater(() -> {
             PsiClass lamiaClass = JavaFileManager.getInstance(project).findClass(Lamia.class.getName(), GlobalSearchScope.allScope(project));
