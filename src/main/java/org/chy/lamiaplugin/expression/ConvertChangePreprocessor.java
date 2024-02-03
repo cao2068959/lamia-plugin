@@ -72,18 +72,8 @@ public class ConvertChangePreprocessor implements PsiTreeChangePreprocessor {
             return;
         }
 
-        // 获取到 这个lamia表达式的所有 依赖关系，key:依赖到的类的全路径，value: 这个类下面所有的字段
-        Map<String, Set<String>> relations = LamiaExpressionManager.getInstance(project).getParticipateVar(lamiaStartExpression);
-
-        LamiaExpression lamiaExpression = new LamiaExpression(lamiaStartExpression, containingFile);
-
-        relations.forEach((classPath, fieldNames) -> {
-            RelationClassWrapper relationClassWrapper = new RelationClassWrapper(classPath);
-            relationClassWrapper.setFiledNames(fieldNames);
-            relationClassWrapper.setLamiaExpression(lamiaExpression);
-            lamiaExpressionManager.addRelations(relationClassWrapper);
-        });
-
+        // 将这个表达式添加进 manager 中，生成包括依赖关系的索引
+        lamiaExpressionManager.updateDependentRelations(lamiaStartExpression);
     }
 
 
@@ -99,7 +89,7 @@ public class ConvertChangePreprocessor implements PsiTreeChangePreprocessor {
             if (lamiaStartExpression == null) {
                 return;
             }
-            ScheduledBatchExecutor.instance.deliverEvent(new LamiaExpressionChangeEvent(lamiaStartExpression, ChangeType.delete));
+            ScheduledBatchExecutor.instance.deliverEvent(new LamiaExpressionChangeEvent(lamiaStartExpression, ChangeType.delete, project));
             System.out.println("tree删除了 --->" + lamiaStartExpression);
             return;
         }
@@ -114,7 +104,7 @@ public class ConvertChangePreprocessor implements PsiTreeChangePreprocessor {
             if (lamiaStartExpression == null) {
                 return;
             }
-            ScheduledBatchExecutor.instance.deliverEvent(new LamiaExpressionChangeEvent(lamiaStartExpression, ChangeType.update));
+            ScheduledBatchExecutor.instance.deliverEvent(new LamiaExpressionChangeEvent(lamiaStartExpression, ChangeType.update, project));
             System.out.println("tree改变了 --->" + lamiaStartExpression);
             return;
         }
@@ -125,7 +115,7 @@ public class ConvertChangePreprocessor implements PsiTreeChangePreprocessor {
                 return;
             }
 
-            ScheduledBatchExecutor.instance.deliverEvent(new LamiaExpressionChangeEvent(lamiaStartExpression, ChangeType.update));
+            ScheduledBatchExecutor.instance.deliverEvent(new LamiaExpressionChangeEvent(lamiaStartExpression, ChangeType.update, project));
             System.out.println("tree添加了 --->" + lamiaStartExpression);
         }
 
@@ -148,8 +138,7 @@ public class ConvertChangePreprocessor implements PsiTreeChangePreprocessor {
             if (lamiaStartExpression == null) {
                 return;
             }
-            ScheduledBatchExecutor.instance.deliverEvent(new LamiaExpressionChangeEvent(lamiaStartExpression, ChangeType.delete));
-            System.out.println("Lamia表达式失效了 --->" + lamiaStartExpression);
+            ScheduledBatchExecutor.instance.deliverEvent(new LamiaExpressionChangeEvent(lamiaStartExpression, ChangeType.delete, project));
             return;
         }
 
@@ -157,8 +146,7 @@ public class ConvertChangePreprocessor implements PsiTreeChangePreprocessor {
         if (lamiaStartExpression == null) {
             return;
         }
-        ScheduledBatchExecutor.instance.deliverEvent(new LamiaExpressionChangeEvent(lamiaStartExpression, ChangeType.update));
-        System.out.println("tree2 改变了 --->" + lamiaStartExpression);
+        ScheduledBatchExecutor.instance.deliverEvent(new LamiaExpressionChangeEvent(lamiaStartExpression, ChangeType.update, project));
     }
 
 

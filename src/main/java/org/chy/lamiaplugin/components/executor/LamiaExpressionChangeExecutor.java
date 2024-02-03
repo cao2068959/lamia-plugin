@@ -1,8 +1,10 @@
 package org.chy.lamiaplugin.components.executor;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiMethodCallExpression;
+import org.chy.lamiaplugin.expression.LamiaExpressionManager;
 
 import java.util.HashMap;
 import java.util.List;
@@ -23,10 +25,8 @@ public class LamiaExpressionChangeExecutor implements BatchExecutor<LamiaExpress
 
     @Override
     public String group() {
-        return "LamiaExpressionChangeExecutor";
+        return "LamiaExpressionChangeExecutor-" + project.getName();
     }
-
-
 
 
     @Override
@@ -35,13 +35,22 @@ public class LamiaExpressionChangeExecutor implements BatchExecutor<LamiaExpress
         for (LamiaExpressionChangeEvent event : events) {
             LamiaExpressionChangeEvent existsEvent = pendingList.get(event.getLamiaExpression());
             // 有重复的情况下 取最新的一个
-            if (existsEvent == null || existsEvent.startTime < event.startTime){
+            if (existsEvent == null || existsEvent.startTime < event.startTime) {
                 pendingList.put(event.getLamiaExpression(), event);
             }
         }
 
-        // 开始重新处理表达式
-        LOG.info("执行---->");
+        ApplicationManager.getApplication().runReadAction(() -> {
+            LamiaExpressionManager manager = LamiaExpressionManager.getInstance(project);
+            pendingList.forEach((lamiaStartExpression, event) -> {
+                if (event.type == ChangeType.delete) {
+                    manager.deleteDependentRelations(lamiaStartExpression);
+                } else {
+                    manager.updateDependentRelations(lamiaStartExpression);
+                }
+            });
+        });
+
 
     }
 

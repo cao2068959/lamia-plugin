@@ -30,6 +30,13 @@ public class RelationClassWrapper {
         filedNames.add(name);
     }
 
+    public boolean isContainFiled(String name) {
+        if (filedNames == null) {
+            return false;
+        }
+        return filedNames.contains(name);
+    }
+
     public void setClassPath(String classPath) {
         this.classPath = classPath;
     }
