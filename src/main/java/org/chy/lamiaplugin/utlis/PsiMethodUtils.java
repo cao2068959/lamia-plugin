@@ -2,6 +2,7 @@ package org.chy.lamiaplugin.utlis;
 
 import com.chy.lamia.convert.core.annotation.LamiaMapping;
 import com.chy.lamia.expose.Lamia;
+import com.chy.lamia.utils.Lists;
 import com.intellij.psi.*;
 import org.w3c.dom.stylesheets.LinkStyle;
 
@@ -209,6 +210,30 @@ public class PsiMethodUtils {
 
         return annotation != null;
 
+    }
+
+    public static List<PsiStatement> getPsiStatement(PsiMethod psiMethod) {
+        PsiCodeBlock psiCodeBlock = getPsiCodeBlock(psiMethod);
+        if (psiCodeBlock == null) {
+            return Lists.empty;
+        }
+        List<PsiStatement> result = new ArrayList<>();
+        for (PsiElement child : psiCodeBlock.getChildren()) {
+            if (child instanceof PsiStatement statement) {
+                result.add(statement);
+            }
+        }
+        return result;
+    }
+
+
+    public static PsiCodeBlock getPsiCodeBlock(PsiMethod psiMethod) {
+        for (PsiElement child : psiMethod.getChildren()) {
+            if (child instanceof PsiCodeBlock result) {
+                return result;
+            }
+        }
+        return null;
     }
 
 }
