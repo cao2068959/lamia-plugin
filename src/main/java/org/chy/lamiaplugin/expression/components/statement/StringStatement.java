@@ -4,9 +4,14 @@ import com.chy.lamia.convert.core.components.entity.Expression;
 import com.chy.lamia.convert.core.components.entity.Statement;
 import org.chy.lamiaplugin.expression.components.StringExpression;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class StringStatement implements Statement {
 
     String data;
+
+    Set<String> importClassPath;
 
     public StringStatement(String data) {
         this.data = data;
@@ -39,5 +44,23 @@ public class StringStatement implements Statement {
     @Override
     public Expression getExpression() {
         return new StringExpression(data);
+    }
+
+
+    public Set<String> getImportClassPath() {
+        return importClassPath;
+    }
+
+    public void addImportClassPath(String classPath) {
+        if (importClassPath == null) {
+            importClassPath = new HashSet<>();
+        }
+        importClassPath.add(classPath);
+    }
+
+    public void addImportClassPath(Expression expression) {
+        if (expression instanceof StringExpression stringExpression) {
+            importClassPath.addAll(stringExpression.getImportClassPath());
+        }
     }
 }

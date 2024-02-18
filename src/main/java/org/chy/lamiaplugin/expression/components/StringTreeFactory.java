@@ -13,19 +13,25 @@ public class StringTreeFactory implements TreeFactory {
     @Override
     public Expression newClass(String classPath, List<Expression> newInstanceParam) {
         String param = param(newInstanceParam);
-        return new StringExpression("new " + classAbb(classPath) + "(" + param + ")");
+        StringExpression result = new StringExpression("new " + classAbb(classPath) + "(" + param + ")");
+        result.addImportClassPath(classPath);
+        return result;
     }
 
     @Override
     public Statement createVar(String instantName, String classPath, Expression newClass) {
         String value = toString(newClass);
-        return new StringStatement(classAbb(classPath) + " " + instantName + " = " + value);
+        StringStatement stringStatement = new StringStatement(classAbb(classPath) + " " + instantName + " = " + value);
+        stringStatement.addImportClassPath(classPath);
+        return stringStatement;
     }
 
     @Override
     public Statement varAssign(String instantName, Expression newClass) {
         String value = toString(newClass);
-        return new StringStatement(instantName + " = " + value);
+        StringStatement stringStatement = new StringStatement(instantName + " = " + value);
+        stringStatement.addImportClassPath(newClass);
+        return stringStatement;
     }
 
     @Override
@@ -59,8 +65,9 @@ public class StringTreeFactory implements TreeFactory {
     @Override
     public Expression typeCast(String classPath, Expression expression) {
         String instant = toString(expression);
-
-        return new StringExpression("(" + classAbb(classPath) + ")" + instant);
+        StringExpression stringExpression = new StringExpression("(" + classAbb(classPath) + ")" + instant);
+        stringExpression.addImportClassPath(classPath);
+        return stringExpression;
     }
 
     @Override

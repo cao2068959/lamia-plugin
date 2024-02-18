@@ -2,6 +2,7 @@ package org.chy.lamiaplugin.expression;
 
 import com.chy.lamia.expose.Lamia;
 import com.chy.lamia.utils.Lists;
+import com.intellij.ide.navigationToolbar.NavBarRootPaneExtension;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
@@ -29,7 +30,6 @@ public class ConvertChangePreprocessor implements PsiTreeChangePreprocessor {
     public ConvertChangePreprocessor(Project project) {
         this.project = project;
         this.lamiaExpressionManager = LamiaExpressionManager.getInstance(project);
-
         DumbService.getInstance(project).smartInvokeLater(() -> {
             PsiClass lamiaClass = JavaFileManager.getInstance(project).findClass(Lamia.class.getName(), GlobalSearchScope.allScope(project));
             if (lamiaClass == null) {
@@ -105,9 +105,7 @@ public class ConvertChangePreprocessor implements PsiTreeChangePreprocessor {
                 ScheduledBatchExecutor.instance.deliverEvent(new LamiaExpressionChangeEvent(lamiaStartExpression, ChangeType.update, project));
                 System.out.println("tree添加了 --->" + lamiaStartExpression);
             });
-
         }
-
     }
 
 

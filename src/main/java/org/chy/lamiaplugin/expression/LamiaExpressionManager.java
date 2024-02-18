@@ -12,6 +12,7 @@ import com.chy.lamia.convert.core.entity.LamiaConvertInfo;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiMethodCallExpression;
+import org.apache.commons.lang3.StringUtils;
 import org.chy.lamiaplugin.exception.LamiaConvertException;
 import org.chy.lamiaplugin.expression.components.SimpleNameHandler;
 import org.chy.lamiaplugin.expression.components.StringExpression;
@@ -80,7 +81,7 @@ public class LamiaExpressionManager {
                 throw new LamiaConvertException("Parsing expression failed!!");
             });
             List<Statement> makeResult = ConvertFactory.INSTANCE.make(lamiaConvertInfo);
-            return ConvertResult.success(convertString(makeResult));
+            return convert(makeResult);
 
         } catch (Exception e) {
             String failMsg;
@@ -106,16 +107,23 @@ public class LamiaExpressionManager {
     }
 
 
-    private String convertString(List<Statement> statements) {
-        StringBuilder result = new StringBuilder();
+    private ConvertResult convert(List<Statement> statements) {
+        StringBuilder code = new StringBuilder();
+        Set<String> allImportClass = new HashSet<>();
         for (Statement statement : statements) {
-            result.append(toString(statement)).append("\n");
+            code.append(convertStatement(statement, allImportClass)).append("\n");
         }
-        return result.toString();
+        ConvertResult result = ConvertResult.success(code.toString());
+        result.setImportClassPath(allImportClass);
+        return result;
     }
 
-    private String toString(Statement statement) {
+    private String convertStatement(Statement statement, Set<String> allImportClass) {
         if (statement instanceof StringStatement stringStatement) {
+            Set<String> importClassPath = stringStatement.getImportClassPath();
+            if (importClassPath != null) {
+                allImportClass.addAll(importClassPath);
+            }
             return stringStatement.getStatement(0);
         }
         return statement.get() + ";";
@@ -184,15 +192,21 @@ public class LamiaExpressionManager {
 
     /**
      * 获取指定的类 关联了那几个 lamiaExpression
+     *
      * @param classPath
      * @return
      */
-    public Set<RelationClassWrapper> getRelationLamia(String classPath){
+    public Set<RelationClassWrapper> getRelationLamia(String classPath) {
         Set<RelationClassWrapper> relationClassWrappers = relationsCache.get(classPath);
         if (relationClassWrappers == null) {
             return new HashSet<>();
         }
         return relationClassWrappers;
     }
+
+    public Set<RelationClassWrapper> getRelation(LamiaExpression lamiaExpression) {
+        return reverseRelationsCache.get(lamiaExpression);
+    }
+
 
 }

@@ -1,21 +1,21 @@
 package org.chy.lamiaplugin.marker;
 
-import com.intellij.ide.highlighter.JavaFileType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.Balloon;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.psi.*;
-import com.intellij.ui.EditorTextField;
 import com.intellij.ui.awt.RelativePoint;
-import com.intellij.ui.components.JBScrollPane;
 import org.chy.lamiaplugin.expression.ConvertResult;
 import org.chy.lamiaplugin.expression.LamiaExpressionManager;
+import org.chy.lamiaplugin.expression.entity.LamiaExpression;
+import org.chy.lamiaplugin.expression.entity.RelationClassWrapper;
 
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -24,20 +24,15 @@ import java.util.concurrent.ConcurrentHashMap;
 public class LamiaLineMarkerHandler {
 
     private static Map<Project, LamiaLineMarkerHandler> instanceList = new ConcurrentHashMap<>();
-    private final EditorTextField editorTextField;
-    private final JBScrollPane jbScrollPane;
 
-    public static PsiElement psiElement;
+    private final MarkerMessagePanel markerMessagePanel;
 
     public static LamiaLineMarkerHandler of(Project project) {
         return instanceList.computeIfAbsent(project, LamiaLineMarkerHandler::new);
     }
 
     public LamiaLineMarkerHandler(Project project) {
-        this.editorTextField = new EditorTextField(null, project, JavaFileType.INSTANCE, true);
-        editorTextField.setOneLineMode(false);
-        this.jbScrollPane = new JBScrollPane(editorTextField);
-
+        this.markerMessagePanel = new MarkerMessagePanel(project);
     }
 
     public void click(MouseEvent event, PsiMethodCallExpression lamiaMethod, boolean isComplete) {
@@ -46,40 +41,64 @@ public class LamiaLineMarkerHandler {
 
 
     private void showTip(String msg, MouseEvent event, PsiMethodCallExpression psiElement, boolean isComplete) {
-        LamiaLineMarkerHandler.psiElement = psiElement;
 
-        PsiElement parentMethod = getSpiCodeBlock(psiElement);
         Project project = psiElement.getProject();
-        PsiDocumentManager documentManager = PsiDocumentManager.getInstance(project);
 
         // 用Lamia表达式生成对应的代码
-        String lamiaCode = getLamaCode(psiElement, project, isComplete);
+        LamiaCode lamiaCode = getLamaCode(psiElement, project, isComplete);
 
-        // 把这个转换语句放入代码块中用于显示
-        JavaCodeFragmentFactory fragmentFactory = JavaCodeFragmentFactory.getInstance(project);
-        JavaCodeFragment code = fragmentFactory.createCodeBlockCodeFragment(lamiaCode, parentMethod, true);
-        //code.addImportsFromString();
+        // 设置要显示的数据
+        setPanelShowData(lamiaCode, project, psiElement);
 
-        Document document = documentManager.getDocument(code);
-
-        editorTextField.setDocument(document);
-
-
+        Insets customInsets = new Insets(0, 0, 0, 0);
         ApplicationManager.getApplication().invokeLater(() -> {
-            JBPopupFactory.getInstance().createBalloonBuilder(jbScrollPane)
+            JBPopupFactory.getInstance().createBalloonBuilder(markerMessagePanel)
                     .setAnimationCycle(10)
+                    .setBorderInsets(customInsets)
                     .setBorderColor(Color.GRAY)
-                    .setFillColor(Color.GRAY)
+                    .setShadow(true)
+                    .setHideOnAction(false)
                     .createBalloon().show(new RelativePoint(event), Balloon.Position.below);
         });
         //.show(new RelativePoint(event), Balloon.Position.below));
     }
 
-    private String getLamaCode(PsiMethodCallExpression psiElement, Project project, boolean isComplete) {
+    private void setPanelShowData(LamiaCode lamiaCode, Project project, PsiMethodCallExpression psiElement) {
+        if (!lamiaCode.success) {
+            markerMessagePanel.fail("Conversion failed", lamiaCode.data);
+            return;
+        }
+        PsiDocumentManager documentManager = PsiDocumentManager.getInstance(project);
+        PsiElement parentMethod = getSpiCodeBlock(psiElement);
+
+        // 把这个转换语句放入代码块中用于显示
+        JavaCodeFragmentFactory fragmentFactory = JavaCodeFragmentFactory.getInstance(project);
+        JavaCodeFragment code = fragmentFactory.createCodeBlockCodeFragment(lamiaCode.getData(), parentMethod, true);
+
+        // 有一个 外部 import的 把他放入到 JavaCodeFragment
+        Set<String> importClassPath = lamiaCode.importClassPath;
+        if (importClassPath != null && !importClassPath.isEmpty()) {
+            for (String importClass : importClassPath) {
+                code.addImportsFromString(importClass);
+            }
+        }
+        Document document = documentManager.getDocument(code);
+        markerMessagePanel.success(document);
+
+        // 去检查这个 表达式是否已经关联上了
+        LamiaExpressionManager manager = LamiaExpressionManager.getInstance(project);
+        LamiaExpression lamiaExpression = new LamiaExpression(psiElement);
+        Set<RelationClassWrapper> relation = manager.getRelation(lamiaExpression);
+        if (relation == null || relation.isEmpty()) {
+            markerMessagePanel.unassociated(lamiaExpression);
+        }
+    }
+
+    private LamiaCode getLamaCode(PsiMethodCallExpression psiElement, Project project, boolean isComplete) {
         // 如果已经知道表达式是不完整的 直接返回对应的提示
         if (!isComplete) {
-            return "Invalid expression, please set the corresponding expression correctly. \n" +
-                    "You can refer to the document: https://github.com/cao2068959/lamia";
+            return new LamiaCode("Invalid expression, please set the corresponding expression correctly. \n" +
+                    "You can refer to the document: https://github.com/cao2068959/lamia", false);
         }
 
         // 用点击的表达式生成对应的转换语句
@@ -91,9 +110,11 @@ public class LamiaLineMarkerHandler {
         //CompilerManager.getInstance(project).compile();
 
         if (lamiaConvertResult.isSuccess()) {
-            return lamiaConvertResult.getData();
+            LamiaCode lamiaCode = new LamiaCode(lamiaConvertResult.getData(), true);
+            lamiaCode.setImportClassPath(lamiaConvertResult.getImportClassPath());
+            return lamiaCode;
         }
-        return lamiaConvertResult.getMsg();
+        return new LamiaCode(lamiaConvertResult.getMsg(), false);
 
     }
 
