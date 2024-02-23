@@ -26,32 +26,21 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
-<!--
-        <fileBasedIndex implementation="org.chy.lamiaplugin.components.MyBusinessDataIndex"/>
--->
 
-
-        <ApplicationLoadListener implementation="org.chy.lamiaplugin.LamiaPluginApplicationLoadListener"></ApplicationLoadListener>
-
+        <ApplicationLoadListener implementation="org.chy.lamiaplugin.LamiaPluginApplicationLoadListener"/>
         <projectService serviceImplementation="org.chy.lamiaplugin.expression.LamiaExpressionManager"/>
         <psi.treeChangePreprocessor implementation="org.chy.lamiaplugin.expression.ConvertChangePreprocessor"/>
-        
-        <treeGenerator implementation="org.chy.lamiaplugin.LamiaTreeGenerator"/>
-        <customUsageSearcher implementation="org.chy.lamiaplugin.LamiaCustomUsageSearcher"></customUsageSearcher>
-
-        <lang.psiAugmentProvider implementation="org.chy.lamiaplugin.LamiaAugmentProvider"/>
-        <codeInsight.lineMarkerProvider language="JAVA" implementationClass="org.chy.lamiaplugin.marker.LamiaMarkerProvider"></codeInsight.lineMarkerProvider>
+        <customUsageSearcher implementation="org.chy.lamiaplugin.LamiaCustomUsageSearcher"/>
+        <codeInsight.lineMarkerProvider language="JAVA"
+                                        implementationClass="org.chy.lamiaplugin.marker.LamiaMarkerProvider"/>
     </extensions>
     <actions>
 
     </actions>
 
     <projectListeners>
-        <listener class="org.chy.lamiaplugin.LamiaProjectManagerListener" topic="com.intellij.openapi.project.ProjectManagerListener"/>
-
-
+        <listener class="org.chy.lamiaplugin.LamiaProjectManagerListener"
+                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
     </projectListeners>
-
-
 
 </idea-plugin>

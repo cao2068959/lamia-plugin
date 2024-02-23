@@ -6,8 +6,9 @@ public class FileChangeEvent extends Event {
 
     PsiFile psiFile;
 
-    public FileChangeEvent() {
+    public FileChangeEvent(PsiFile psiFile) {
         super("BuildRefreshExecutor");
+        this.psiFile = psiFile;
     }
 
     public PsiFile getData() {

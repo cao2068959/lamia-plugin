@@ -9,14 +9,18 @@ import com.intellij.psi.*;
 import com.intellij.psi.impl.PsiTreeChangeEventImpl;
 import com.intellij.psi.impl.PsiTreeChangePreprocessor;
 import com.intellij.psi.impl.file.impl.JavaFileManager;
+import com.intellij.psi.impl.source.tree.java.FieldElement;
+import com.intellij.psi.impl.source.tree.java.MethodElement;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import org.chy.lamiaplugin.components.executor.ChangeType;
+import org.chy.lamiaplugin.components.executor.FileChangeEvent;
 import org.chy.lamiaplugin.components.executor.LamiaExpressionChangeEvent;
 import org.chy.lamiaplugin.components.executor.ScheduledBatchExecutor;
 import org.chy.lamiaplugin.utlis.PsiMethodUtils;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.AnnotatedElement;
 import java.util.*;
 
 import static com.intellij.psi.impl.PsiTreeChangeEventImpl.PsiEventType.*;
@@ -75,6 +79,9 @@ public class ConvertChangePreprocessor implements PsiTreeChangePreprocessor {
                 event.getCode() == CHILD_REMOVED || event.getCode() == CHILD_ADDED)) {
             return;
         }
+
+        buildRefresh(event);
+
         if (event.getCode() == CHILD_REMOVED) {
             PsiMethodCallExpression lamiaStartExpression = getLamiaExpression(event.getChild(), false);
             if (lamiaStartExpression == null) {
@@ -106,6 +113,50 @@ public class ConvertChangePreprocessor implements PsiTreeChangePreprocessor {
                 System.out.println("tree添加了 --->" + lamiaStartExpression);
             });
         }
+    }
+
+
+    private void buildRefresh(PsiTreeChangeEventImpl event) {
+        PsiElement child = event.getChild();
+        if (child == null) {
+            child = event.getOldChild();
+        }
+
+        // 这个元素不需要刷新
+        if (!isBuildRefreshElement(child, true)) {
+            return;
+        }
+
+        ScheduledBatchExecutor.instance.deliverEvent(new FileChangeEvent(event.getFile()));
+    }
+
+    private boolean isBuildRefreshElement(PsiElement psiElement, boolean continueCheck) {
+        if (psiElement == null) {
+            return false;
+        }
+
+        if (psiElement instanceof PsiField) {
+            return true;
+        }
+
+        if (psiElement instanceof PsiMethod) {
+            return true;
+        }
+
+        if (psiElement instanceof AnnotatedElement || psiElement instanceof PsiAnnotation) {
+            return true;
+        }
+
+        if (psiElement instanceof PsiJavaCodeReferenceElement && psiElement.getParent() instanceof PsiAnnotation) {
+            return true;
+        }
+
+
+        if (continueCheck) {
+            // 他的父类是否符合类型条件
+            return isBuildRefreshElement(psiElement.getParent(), false);
+        }
+        return false;
     }
 
 

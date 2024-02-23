@@ -22,7 +22,6 @@ public class LamiaProjectManagerListener implements ProjectManagerListener {
 
     @Override
     public void projectOpened(@NotNull Project project) {
-        System.out.println("----> 项目打开");
         ScheduledBatchExecutor.instance.registerBatchExecutor(new LamiaExpressionChangeExecutor(project));
     }
 }

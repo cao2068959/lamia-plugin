@@ -28,6 +28,9 @@ import java.util.function.Consumer;
 
 public class LamiaExpressionManager {
     Project project;
+
+    ConvertFactory convertFactory;
+
     static Map<Project, LamiaExpressionManager> instances = new ConcurrentHashMap<>();
     LamiaExpressionResolver expressionResolver = new LamiaExpressionResolver();
     private static final Logger LOG = Logger.getInstance(LamiaExpressionManager.class);
@@ -60,16 +63,13 @@ public class LamiaExpressionManager {
 
     private LamiaExpressionManager(Project project) {
         this.project = project;
+        convertFactory = new ConvertFactory();
         registerLamiaComponents();
     }
 
 
     private void registerLamiaComponents() {
-        ComponentFactory.registerComponents(TreeFactory.class, new StringTreeFactory());
-        ComponentFactory.registerComponents(TypeResolverFactory.class, new IdeaJavaTypeResolverFactory(project));
-        ComponentFactory.registerEntityStructure(Expression.class, StringExpression::new);
-        ComponentFactory.registerEntityStructure(Statement.class, StringStatement::new);
-        ComponentFactory.registerComponents(NameHandler.class, new SimpleNameHandler());
+        ComponentFactory.registerInstanceComponents(convertFactory, TypeResolverFactory.class, new IdeaJavaTypeResolverFactory(project));
     }
 
 
@@ -80,7 +80,7 @@ public class LamiaExpressionManager {
                 LOG.warn("解析表达式失败", e);
                 throw new LamiaConvertException("Parsing expression failed!!");
             });
-            List<Statement> makeResult = ConvertFactory.INSTANCE.make(lamiaConvertInfo);
+            List<Statement> makeResult = convertFactory.make(lamiaConvertInfo);
             return convert(makeResult);
 
         } catch (Exception e) {
@@ -100,9 +100,9 @@ public class LamiaExpressionManager {
 
         try {
             LamiaConvertInfo lamiaConvertInfo = expressionResolver.resolving(psiElement);
-            return ConvertFactory.INSTANCE.getParticipateVar(lamiaConvertInfo);
+            return convertFactory.getParticipateVar(lamiaConvertInfo);
         } catch (Exception e) {
-            return new HashMap<>();
+            return null;
         }
     }
 
@@ -147,23 +147,29 @@ public class LamiaExpressionManager {
     public void updateDependentRelations(PsiMethodCallExpression expression) {
 
         LamiaExpression lamiaExpression = new LamiaExpression(expression);
-        // 先删除原有的依赖关系，如果存在的话
-        deleteDependentRelations(lamiaExpression);
-
         // 如果表达式无效了，那也不需要去添加额外的关系了
         if (!expression.isValid()) {
+            // 无效的表达式了，直接删除原有的依赖
+            deleteDependentRelations(lamiaExpression);
             return;
         }
         lamiaExpression.setPsiFile(expression.getContainingFile());
         // 获取到 这个lamia表达式的所有 依赖关系，key:依赖到的类的全路径，value: 这个类下面所有使用到的字段
         Map<String, Set<String>> relations = this.getParticipateVar(expression);
-        // 添加新的依赖关系
-        relations.forEach((classPath, fieldNames) -> {
-            RelationClassWrapper relationClassWrapper = new RelationClassWrapper(classPath);
-            relationClassWrapper.setFiledNames(fieldNames);
-            relationClassWrapper.setLamiaExpression(lamiaExpression);
-            this.addRelations(relationClassWrapper);
-        });
+
+        if (relations != null) {
+            // 在添加之前去删除原有的连接关系
+            deleteDependentRelations(lamiaExpression);
+            // 添加新的依赖关系
+            relations.forEach((classPath, fieldNames) -> {
+                RelationClassWrapper relationClassWrapper = new RelationClassWrapper(classPath);
+                relationClassWrapper.setFiledNames(fieldNames);
+                relationClassWrapper.setLamiaExpression(lamiaExpression);
+                this.addRelations(relationClassWrapper);
+            });
+        }
+
+
     }
 
     public void deleteDependentRelations(PsiMethodCallExpression expression) {
