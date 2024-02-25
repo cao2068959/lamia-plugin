@@ -3,8 +3,8 @@ plugins {
     id("org.jetbrains.intellij") version "1.15.0"
 }
 
-group = "com.example"
-version = "1.0-SNAPSHOT"
+group = "org.chy"
+version = "1.0.0"
 
 repositories {
     mavenLocal()
@@ -25,8 +25,8 @@ intellij {
 tasks {
 
     patchPluginXml {
-        sinceBuild.set("222")
-        untilBuild.set("232.*")
+        sinceBuild.set("202")
+        untilBuild.set("243.*")
     }
 
     signPlugin {
@@ -42,6 +42,6 @@ tasks {
 
 
 dependencies{
-    implementation("io.github.cao2068959", "lamia-compile","2.0.1" )
+    implementation("io.github.cao2068959", "lamia-compile","2.1.0" )
 }
 

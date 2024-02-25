@@ -33,11 +33,13 @@ public class MarkerMessagePanel extends JPanel {
         // 创建一个滚动面板并设置视口视图
         this.scrollPane = new JBScrollPane(editorTextField);
         // 创建一个工具栏
-        this.toolBar = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        this.toolBar = new JPanel(new BorderLayout());
 
         this.markerStatusButton = new MarkerStatusButton("conversion success", project);
+        UpdateExpRelationButton updateExpRelationButton = new UpdateExpRelationButton(project);
         // 将按钮添加到工具栏
-        toolBar.add(markerStatusButton.actionButton);
+        toolBar.add(markerStatusButton.actionButton, BorderLayout.WEST);
+        toolBar.add(updateExpRelationButton.actionButton, BorderLayout.EAST);
 
         // 将工具栏添加到面板的北部（顶部）
         this.add(toolBar, BorderLayout.NORTH);

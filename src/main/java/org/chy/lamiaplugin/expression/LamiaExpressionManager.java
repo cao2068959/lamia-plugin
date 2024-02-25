@@ -9,6 +9,7 @@ import com.chy.lamia.convert.core.components.TypeResolverFactory;
 import com.chy.lamia.convert.core.components.entity.Expression;
 import com.chy.lamia.convert.core.components.entity.Statement;
 import com.chy.lamia.convert.core.entity.LamiaConvertInfo;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiMethodCallExpression;
@@ -21,6 +22,7 @@ import org.chy.lamiaplugin.expression.components.StringTreeFactory;
 import org.chy.lamiaplugin.expression.components.type_resolver.IdeaJavaTypeResolverFactory;
 import org.chy.lamiaplugin.expression.entity.LamiaExpression;
 import org.chy.lamiaplugin.expression.entity.RelationClassWrapper;
+import org.chy.lamiaplugin.utlis.Wrapper;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -99,8 +101,12 @@ public class LamiaExpressionManager {
     public Map<String, Set<String>> getParticipateVar(PsiMethodCallExpression psiElement) {
 
         try {
-            LamiaConvertInfo lamiaConvertInfo = expressionResolver.resolving(psiElement);
-            return convertFactory.getParticipateVar(lamiaConvertInfo);
+            Wrapper<LamiaConvertInfo> wrapper = new Wrapper<>();
+            ApplicationManager.getApplication().runReadAction(() -> {
+                LamiaConvertInfo lamiaConvertInfo = expressionResolver.resolving(psiElement);
+                wrapper.setData(lamiaConvertInfo);
+            });
+            return convertFactory.getParticipateVar(wrapper.getData());
         } catch (Exception e) {
             return null;
         }

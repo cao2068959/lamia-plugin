@@ -5,9 +5,11 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.Presentation;
 import com.intellij.openapi.actionSystem.impl.ActionButton;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import org.chy.lamiaplugin.expression.LamiaExpressionManager;
 import org.chy.lamiaplugin.expression.entity.LamiaExpression;
+import org.chy.lamiaplugin.task.UpdateExpRelationTask;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;

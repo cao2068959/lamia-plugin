@@ -3,6 +3,7 @@ package org.chy.lamiaplugin.expression;
 import com.chy.lamia.expose.Lamia;
 import com.chy.lamia.utils.Lists;
 import com.intellij.ide.navigationToolbar.NavBarRootPaneExtension;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
@@ -34,42 +35,9 @@ public class ConvertChangePreprocessor implements PsiTreeChangePreprocessor {
     public ConvertChangePreprocessor(Project project) {
         this.project = project;
         this.lamiaExpressionManager = LamiaExpressionManager.getInstance(project);
-        DumbService.getInstance(project).smartInvokeLater(() -> {
-            PsiClass lamiaClass = JavaFileManager.getInstance(project).findClass(Lamia.class.getName(), GlobalSearchScope.allScope(project));
-            if (lamiaClass == null) {
-                return;
-            }
-            Collection<PsiReference> all = ReferencesSearch.search(lamiaClass).findAll();
-            for (PsiReference psiReference : all) {
-                addRelation(psiReference);
-            }
-            System.out.println(all);
-        });
     }
 
-    /**
-     * 收集
-     *
-     * @param psiReference
-     */
-    private void addRelation(PsiReference psiReference) {
-        PsiElement element = psiReference.getElement();
-        PsiFile containingFile = element.getContainingFile();
-        if (containingFile == null) {
-            return;
-        }
-        PsiMethodCallExpression methodCall = PsiMethodUtils.getMethodCall(element);
-        if (methodCall == null) {
-            return;
-        }
-        PsiMethodCallExpression lamiaStartExpression = PsiMethodUtils.getLamiaStartExpression(methodCall);
-        if (lamiaStartExpression == null) {
-            return;
-        }
 
-        // 将这个表达式添加进 manager 中，生成包括依赖关系的索引
-        lamiaExpressionManager.updateDependentRelations(lamiaStartExpression);
-    }
 
 
     @Override
@@ -162,32 +130,35 @@ public class ConvertChangePreprocessor implements PsiTreeChangePreprocessor {
 
     private void beforeChildReplacementHandler(PsiTreeChangeEventImpl event) {
         PsiElement oldChild = event.getOldChild();
-        if (oldChild == null) {
-            return;
-        }
-        String text = oldChild.getText();
-        // 修改了标志位
-        if ("Lamia".equals(text)) {
-            PsiElement newChild = event.getNewChild();
-            // Lamia的标志位没有变动不需要修改
-            if (newChild != null && "Lamia".equals(newChild.getText())) {
-                return;
+        if (oldChild != null) {
+            String text = oldChild.getText();
+            // 修改了标志位
+            if ("Lamia".equals(text)) {
+                updateLamiaFlag(event);
             }
-            PsiMethodCallExpression lamiaStartExpression = getLamiaExpression(event.getOldChild(), false);
+        }
+        PsiElement child = event.getNewChild();
+        if (child != null) {
+            PsiMethodCallExpression lamiaStartExpression = getLamiaExpression(event.getNewChild(), true);
             if (lamiaStartExpression == null) {
                 return;
             }
-            ScheduledBatchExecutor.instance.deliverEvent(new LamiaExpressionChangeEvent(lamiaStartExpression, ChangeType.delete, project));
+            ScheduledBatchExecutor.instance.deliverEvent(new LamiaExpressionChangeEvent(lamiaStartExpression, ChangeType.update, project));
+        }
+    }
+
+    private void updateLamiaFlag(PsiTreeChangeEventImpl event) {
+        PsiElement newChild = event.getNewChild();
+        // Lamia的标志位没有变动不需要修改
+        if (newChild != null && "Lamia".equals(newChild.getText())) {
             return;
         }
-
-        PsiMethodCallExpression lamiaStartExpression = getLamiaExpression(event.getNewChild(), true);
+        PsiMethodCallExpression lamiaStartExpression = getLamiaExpression(event.getOldChild(), false);
         if (lamiaStartExpression == null) {
             return;
         }
-        ScheduledBatchExecutor.instance.deliverEvent(new LamiaExpressionChangeEvent(lamiaStartExpression, ChangeType.update, project));
+        ScheduledBatchExecutor.instance.deliverEvent(new LamiaExpressionChangeEvent(lamiaStartExpression, ChangeType.delete, project));
     }
-
 
     private List<PsiMethodCallExpression> extractExpressionFromMethod(PsiElement psiElement) {
         // 如果不是方法，那么就直接

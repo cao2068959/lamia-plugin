@@ -12,6 +12,7 @@ import com.intellij.openapi.application.Application;
 import com.intellij.psi.PsiManager;
 import org.chy.lamiaplugin.components.executor.BuildRefreshExecutor;
 import org.chy.lamiaplugin.components.executor.ScheduledBatchExecutor;
+import org.chy.lamiaplugin.components.executor.UpdateExpRelationExecutor;
 import org.chy.lamiaplugin.expression.components.SimpleNameHandler;
 import org.chy.lamiaplugin.expression.components.StringExpression;
 import org.chy.lamiaplugin.expression.components.StringTreeFactory;
@@ -27,6 +28,7 @@ public class LamiaPluginApplicationLoadListener implements ApplicationLoadListen
     public void beforeApplicationLoaded(@NotNull Application application, @NotNull Path configPath) {
         ScheduledBatchExecutor.instance = new ScheduledBatchExecutor(6000);
         ScheduledBatchExecutor.instance.registerBatchExecutor(new BuildRefreshExecutor());
+        ScheduledBatchExecutor.instance.registerBatchExecutor(new UpdateExpRelationExecutor());
         registerLamiaComponents();
     }
 

@@ -1,21 +1,20 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
-    <id>com.example.lamia-plugin</id>
+    <id>org.chy.lamia-plugin</id>
 
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
     <name>Lamia-plugin</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
-    <vendor email="support@yourcompany.com" url="https://www.yourcompany.com">YourCompany</vendor>
+    <vendor email="704188931@qq.com" url="https://github.com/cao2068959" logo="logo.png">bigNoseCat</vendor>
 
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
     <description><![CDATA[
-    Enter short description for your plugin here.<br>
-    <em>most HTML tags may be used</em>
+lamia is a high-performance object conversion tool that can use simple java expressions to generate corresponding conversion codes at compile time. This plug-in is an auxiliary tool for lamia. You can directly view the corresponding generated conversion statements in the expression, or you can Bind the objects participating in the conversion to the expression
   ]]></description>
 
     <!-- Product and plugin compatibility requirements.
@@ -26,6 +25,7 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
+
 
         <ApplicationLoadListener implementation="org.chy.lamiaplugin.LamiaPluginApplicationLoadListener"/>
         <projectService serviceImplementation="org.chy.lamiaplugin.expression.LamiaExpressionManager"/>
@@ -41,6 +41,8 @@
     <projectListeners>
         <listener class="org.chy.lamiaplugin.LamiaProjectManagerListener"
                   topic="com.intellij.openapi.project.ProjectManagerListener"/>
+        <listener class="org.chy.lamiaplugin.MyModuleListener" topic="com.intellij.openapi.project.ModuleListener"/>
+
     </projectListeners>
 
 </idea-plugin>
