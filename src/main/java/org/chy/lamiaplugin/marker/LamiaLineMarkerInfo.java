@@ -14,9 +14,7 @@ import com.intellij.openapi.util.IconLoader;
 import com.intellij.psi.*;
 
 
-import com.siyeh.ig.psiutils.MethodCallUtils;
 import org.chy.lamiaplugin.utlis.PsiMethodUtils;
-import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 
@@ -27,64 +25,67 @@ public class LamiaLineMarkerInfo<T extends PsiElement> extends LineMarkerInfo<T>
     static Icon LAMIA_ICON = IconLoader.getIcon("/images/img_1.png", LamiaLineMarkerInfo.class);
 
     static Icon LAMIA_ICON2 = IconLoader.getIcon("/images/img_2.png", LamiaLineMarkerInfo.class);
-    private final Project project;
-    private final Document document;
-
-    /**
-     * 表达式不完整有缺失
-     */
-    private final boolean isComplete;
 
 
-    private PsiMethodCallExpression lamiaMethod;
-
-
-    public LamiaLineMarkerInfo(@NotNull T element, PsiMethodCallExpression lamiaMethod, boolean isComplete) {
-        super(element, element.getTextRange(),
-                isComplete ? LAMIA_ICON : LAMIA_ICON2, (data) -> "Lamia转换语句",
-                null,
+    public LamiaLineMarkerInfo(Handler<T> handler) {
+        super(handler.element, handler.element.getTextRange(),
+                handler.isComplete ? LAMIA_ICON : LAMIA_ICON2, (data) -> "Lamia转换语句",
+                handler.getNavigationHandler(),
                 GutterIconRenderer.Alignment.CENTER, () -> "LamiaMarkerInfo");
-        this.lamiaMethod = lamiaMethod;
-        this.project = lamiaMethod.getProject();
-        PsiDocumentManager documentManager = PsiDocumentManager.getInstance(project);
-        this.document = documentManager.getDocument(element.getContainingFile());
-        this.isComplete = isComplete;
+        handler.setLineMarkerInfo(this);
     }
 
-    public GutterIconNavigationHandler<T> getNavigationHandler() {
-        return (event, psiElement) -> {
-            PsiMethodCallExpression method = getLamiaMethod();
-            LamiaLineMarkerHandler handler = LamiaLineMarkerHandler.of(method.getProject());
-            handler.click(event, method, isComplete);
-        };
-    }
 
-    @Override
-    public Icon getIcon() {
-        return super.getIcon();
-    }
+    public static class Handler<T extends PsiElement> {
+        private final Project project;
+        private PsiMethodCallExpression lamiaMethod;
+        private final boolean isComplete;
+        private final T element;
+        private final Document document;
+        private LamiaLineMarkerInfo<T> lineMarkerInfo;
 
-    public void setLamiaMethod(PsiMethodCallExpression lamiaMethod) {
-        this.lamiaMethod = lamiaMethod;
-    }
+        public Handler(T element,
+                       PsiMethodCallExpression lamiaMethod, boolean isComplete) {
+            this.element = element;
+            this.project = element.getProject();
+            this.lamiaMethod = lamiaMethod;
+            this.isComplete = isComplete;
 
-    public PsiMethodCallExpression getLamiaMethod() {
-        if (lamiaMethod.isValid()) {
+            PsiDocumentManager documentManager = PsiDocumentManager.getInstance(project);
+            this.document = documentManager.getDocument(element.getContainingFile());
+        }
+
+
+        public GutterIconNavigationHandler<T> getNavigationHandler() {
+            return (event, psiElement) -> {
+                PsiMethodCallExpression method = getLamiaMethod();
+                LamiaLineMarkerHandler handler = LamiaLineMarkerHandler.of(method.getProject());
+                handler.click(event, method, isComplete);
+            };
+        }
+
+        public PsiMethodCallExpression getLamiaMethod() {
+            if (lamiaMethod.isValid()) {
+                return lamiaMethod;
+            }
+            PsiMethodCallExpression lamiaMethodByOffset = getLamiaMethodByOffset(lineMarkerInfo.startOffset);
+            if (lamiaMethodByOffset != null) {
+                lamiaMethod = lamiaMethodByOffset;
+                return lamiaMethodByOffset;
+            }
             return lamiaMethod;
         }
-        PsiMethodCallExpression lamiaMethodByOffset = getLamiaMethodByOffset(this.startOffset);
-        if (lamiaMethodByOffset != null) {
-            lamiaMethod = lamiaMethodByOffset;
-            return lamiaMethodByOffset;
-        }
-        return lamiaMethod;
-    }
 
-    private PsiMethodCallExpression getLamiaMethodByOffset(int offset) {
-        PsiDocumentManager psiDocumentManager = PsiDocumentManager.getInstance(project);
-        PsiFile psiFile = psiDocumentManager.getPsiFile(document);
-        PsiElement elementAt = psiFile.findElementAt(offset);
-        return PsiMethodUtils.getMethodCall(elementAt);
+        private PsiMethodCallExpression getLamiaMethodByOffset(int offset) {
+            PsiDocumentManager psiDocumentManager = PsiDocumentManager.getInstance(project);
+            PsiFile psiFile = psiDocumentManager.getPsiFile(document);
+            PsiElement elementAt = psiFile.findElementAt(offset);
+            return PsiMethodUtils.getMethodCall(elementAt);
+        }
+
+        public void setLineMarkerInfo(LamiaLineMarkerInfo<T> lineMarkerInfo) {
+            this.lineMarkerInfo = lineMarkerInfo;
+        }
     }
 
 

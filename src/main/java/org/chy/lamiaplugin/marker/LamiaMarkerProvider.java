@@ -1,28 +1,17 @@
 package org.chy.lamiaplugin.marker;
 
 
-import cn.hutool.core.util.ReflectUtil;
 import com.chy.lamia.convert.core.entity.LamiaConvertInfo;
 import com.intellij.codeInsight.daemon.LineMarkerInfo;
 import com.intellij.codeInsight.daemon.LineMarkerProvider;
 
-import com.intellij.codeInsight.daemon.impl.LineMarkersUtil;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.editor.ex.MarkupModelEx;
-import com.intellij.openapi.editor.impl.DocumentMarkupModel;
-import com.intellij.openapi.editor.markup.RangeHighlighter;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Key;
+
 import com.intellij.psi.*;
 
-import org.chy.lamiaplugin.expression.ConvertResult;
 import org.chy.lamiaplugin.expression.LamiaExpressionManager;
 import org.jetbrains.annotations.NotNull;
 
-
-import java.util.Collection;
-import java.util.List;
 
 import static org.chy.lamiaplugin.utlis.PsiMethodUtils.isLamiaExpressionMethodCall;
 
@@ -49,8 +38,8 @@ public class LamiaMarkerProvider implements LineMarkerProvider {
 
         boolean isComplete = isCompleteExpression(methodCallExpression);
         PsiElement leafElement = element.getFirstChild().getFirstChild().getLastChild();
-        LamiaLineMarkerInfo<PsiElement> marker = new LamiaLineMarkerInfo<>(leafElement, methodCallExpression, isComplete);
-        return marker;
+
+        return new LamiaLineMarkerInfo<>(new LamiaLineMarkerInfo.Handler<>(leafElement, methodCallExpression, isComplete));
     }
 
     private boolean isCompleteExpression(PsiMethodCallExpression methodCallExpression) {

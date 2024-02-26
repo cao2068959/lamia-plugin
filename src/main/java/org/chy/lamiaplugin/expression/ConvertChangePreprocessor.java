@@ -1,23 +1,22 @@
 package org.chy.lamiaplugin.expression;
 
-import com.chy.lamia.expose.Lamia;
+import com.chy.lamia.convert.core.components.ComponentFactory;
+import com.chy.lamia.convert.core.components.NameHandler;
+import com.chy.lamia.convert.core.components.TreeFactory;
+import com.chy.lamia.convert.core.components.entity.Expression;
+import com.chy.lamia.convert.core.components.entity.Statement;
 import com.chy.lamia.utils.Lists;
-import com.intellij.ide.navigationToolbar.NavBarRootPaneExtension;
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.project.DumbService;
+
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.PsiTreeChangeEventImpl;
 import com.intellij.psi.impl.PsiTreeChangePreprocessor;
-import com.intellij.psi.impl.file.impl.JavaFileManager;
-import com.intellij.psi.impl.source.tree.java.FieldElement;
-import com.intellij.psi.impl.source.tree.java.MethodElement;
-import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.psi.search.searches.ReferencesSearch;
-import org.chy.lamiaplugin.components.executor.ChangeType;
-import org.chy.lamiaplugin.components.executor.FileChangeEvent;
-import org.chy.lamiaplugin.components.executor.LamiaExpressionChangeEvent;
-import org.chy.lamiaplugin.components.executor.ScheduledBatchExecutor;
+
+import org.chy.lamiaplugin.components.executor.*;
+import org.chy.lamiaplugin.expression.components.SimpleNameHandler;
+import org.chy.lamiaplugin.expression.components.StringExpression;
+import org.chy.lamiaplugin.expression.components.StringTreeFactory;
+import org.chy.lamiaplugin.expression.components.statement.StringStatement;
 import org.chy.lamiaplugin.utlis.PsiMethodUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -31,13 +30,47 @@ public class ConvertChangePreprocessor implements PsiTreeChangePreprocessor {
     private final LamiaExpressionManager lamiaExpressionManager;
     Project project;
 
+    static boolean applicationLoaded = false;
+
 
     public ConvertChangePreprocessor(Project project) {
+        applicationLoad();
+        projectLoad(project);
         this.project = project;
         this.lamiaExpressionManager = LamiaExpressionManager.getInstance(project);
     }
 
 
+    public void projectLoad(Project project) {
+        ScheduledBatchExecutor.instance.registerBatchExecutor(new LamiaExpressionChangeExecutor(project));
+    }
+
+    public void applicationLoad() {
+        if (applicationLoaded) {
+            return;
+        }
+        synchronized (ConvertChangePreprocessor.class) {
+            if (applicationLoaded) {
+                return;
+            }
+            doApplicationLoad();
+            applicationLoaded = true;
+        }
+    }
+
+    public void doApplicationLoad(){
+        ScheduledBatchExecutor.instance = new ScheduledBatchExecutor(6000);
+        ScheduledBatchExecutor.instance.registerBatchExecutor(new BuildRefreshExecutor());
+        ScheduledBatchExecutor.instance.registerBatchExecutor(new UpdateExpRelationExecutor());
+        registerLamiaComponents();
+    }
+
+    private void registerLamiaComponents() {
+        ComponentFactory.registerComponents(TreeFactory.class, new StringTreeFactory());
+        ComponentFactory.registerEntityStructure(Expression.class, StringExpression::new);
+        ComponentFactory.registerEntityStructure(Statement.class, StringStatement::new);
+        ComponentFactory.registerComponents(NameHandler.class, new SimpleNameHandler());
+    }
 
 
     @Override
