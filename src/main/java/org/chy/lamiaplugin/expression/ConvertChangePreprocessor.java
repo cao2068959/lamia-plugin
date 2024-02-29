@@ -58,7 +58,7 @@ public class ConvertChangePreprocessor implements PsiTreeChangePreprocessor {
         }
     }
 
-    public void doApplicationLoad(){
+    public void doApplicationLoad() {
         ScheduledBatchExecutor.instance = new ScheduledBatchExecutor(6000);
         ScheduledBatchExecutor.instance.registerBatchExecutor(new BuildRefreshExecutor());
         ScheduledBatchExecutor.instance.registerBatchExecutor(new UpdateExpRelationExecutor());
@@ -89,7 +89,6 @@ public class ConvertChangePreprocessor implements PsiTreeChangePreprocessor {
                 return;
             }
             ScheduledBatchExecutor.instance.deliverEvent(new LamiaExpressionChangeEvent(lamiaStartExpression, ChangeType.delete, project));
-            System.out.println("tree删除了 --->" + lamiaStartExpression);
             return;
         }
 
@@ -104,14 +103,12 @@ public class ConvertChangePreprocessor implements PsiTreeChangePreprocessor {
                 return;
             }
             ScheduledBatchExecutor.instance.deliverEvent(new LamiaExpressionChangeEvent(lamiaStartExpression, ChangeType.update, project));
-            System.out.println("tree改变了 --->" + lamiaStartExpression);
             return;
         }
 
         if (event.getCode() == CHILD_ADDED) {
             extractExpressionFromMethod(event.getChild()).forEach(lamiaStartExpression -> {
                 ScheduledBatchExecutor.instance.deliverEvent(new LamiaExpressionChangeEvent(lamiaStartExpression, ChangeType.update, project));
-                System.out.println("tree添加了 --->" + lamiaStartExpression);
             });
         }
     }
@@ -171,13 +168,23 @@ public class ConvertChangePreprocessor implements PsiTreeChangePreprocessor {
             }
         }
         PsiElement child = event.getNewChild();
-        if (child != null) {
-            PsiMethodCallExpression lamiaStartExpression = getLamiaExpression(event.getNewChild(), true);
+        if (isInvalidElement(child)) {
+            PsiMethodCallExpression lamiaStartExpression = getLamiaExpression(event.getNewChild(), false);
             if (lamiaStartExpression == null) {
                 return;
             }
             ScheduledBatchExecutor.instance.deliverEvent(new LamiaExpressionChangeEvent(lamiaStartExpression, ChangeType.update, project));
         }
+    }
+
+    private boolean isInvalidElement(PsiElement psiElement) {
+        if (psiElement == null) {
+            return false;
+        }
+        if (psiElement instanceof PsiWhiteSpace) {
+            return false;
+        }
+        return true;
     }
 
     private void updateLamiaFlag(PsiTreeChangeEventImpl event) {

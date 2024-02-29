@@ -57,6 +57,13 @@ public class IdeaJavaTypeResolver implements TypeResolver {
     public List<Constructor> getConstructors() {
         PsiMethod[] constructors = psiClass.getConstructors();
         List<Constructor> result = new ArrayList<>();
+        // 没有构造器，使用一个无参构造器
+        if (constructors.length == 0) {
+            Constructor cs = new Constructor();
+            cs.setParams(new ArrayList<>());
+            result.add(cs);
+        }
+
         for (PsiMethod constructor : constructors) {
             Constructor cs = new Constructor();
             cs.setParams(toVarDefinitions(constructor.getParameters()));

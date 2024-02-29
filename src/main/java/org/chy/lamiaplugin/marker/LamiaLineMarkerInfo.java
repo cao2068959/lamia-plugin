@@ -14,6 +14,7 @@ import com.intellij.openapi.util.IconLoader;
 import com.intellij.psi.*;
 
 
+import org.chy.lamiaplugin.exception.LamiaException;
 import org.chy.lamiaplugin.utlis.PsiMethodUtils;
 
 import javax.swing.*;
@@ -58,21 +59,32 @@ public class LamiaLineMarkerInfo<T extends PsiElement> extends LineMarkerInfo<T>
 
         public GutterIconNavigationHandler<T> getNavigationHandler() {
             return (event, psiElement) -> {
-                PsiMethodCallExpression method = getLamiaMethod();
-                LamiaLineMarkerHandler handler = LamiaLineMarkerHandler.of(method.getProject());
+                LamiaLineMarkerHandler handler = LamiaLineMarkerHandler.of(project);
+                PsiMethodCallExpression method;
+                try {
+                    method = getLamiaMethod();
+                } catch (Exception e) {
+                    handler.showFailMsg(event, "The current expression ref is invalid：" + e.getMessage());
+                    return;
+                }
                 handler.click(event, method, isComplete);
             };
         }
 
+
         public PsiMethodCallExpression getLamiaMethod() {
-            if (lamiaMethod.isValid()) {
+           if (lamiaMethod.isValid()) {
                 return lamiaMethod;
             }
-            PsiMethodCallExpression lamiaMethodByOffset = getLamiaMethodByOffset(lineMarkerInfo.startOffset);
-            if (lamiaMethodByOffset != null) {
-                lamiaMethod = lamiaMethodByOffset;
-                return lamiaMethodByOffset;
+            PsiMethodCallExpression methodCall = PsiMethodUtils.getMethodCall(lineMarkerInfo.getElement());
+            if (methodCall == null) {
+                throw new LamiaException("The current expression has expired, but a new expression reference cannot be found \n " +
+                        "If there must be a bug, please contact the author for modification\n" +
+                        "\n" +
+                        "QQ: 704188931");
             }
+
+            lamiaMethod = methodCall;
             return lamiaMethod;
         }
 

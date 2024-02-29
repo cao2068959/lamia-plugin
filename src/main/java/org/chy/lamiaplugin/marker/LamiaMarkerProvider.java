@@ -47,9 +47,10 @@ public class LamiaMarkerProvider implements LineMarkerProvider {
         LamiaConvertInfo lamiaConvertInfo = manager.resolvingExpression(methodCallExpression, e -> {
             LOG.warn("解析lamia表达式失败", e);
         });
-        if (lamiaConvertInfo == null) {
+        if (lamiaConvertInfo == null || lamiaConvertInfo.getLamiaExpression() == null) {
             return false;
         }
+
         return lamiaConvertInfo.isCompleteConvert();
     }
 

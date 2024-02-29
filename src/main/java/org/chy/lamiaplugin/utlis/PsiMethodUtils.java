@@ -4,6 +4,8 @@ import com.chy.lamia.convert.core.annotation.LamiaMapping;
 import com.chy.lamia.expose.Lamia;
 import com.chy.lamia.utils.Lists;
 import com.intellij.psi.*;
+import com.intellij.psi.impl.source.tree.TreeElement;
+import com.intellij.psi.impl.source.tree.TreeUtil;
 import org.w3c.dom.stylesheets.LinkStyle;
 
 import java.util.ArrayList;
@@ -96,6 +98,18 @@ public class PsiMethodUtils {
         }
 
         return null;
+    }
+
+    /**
+     * 判断 psiElement 是否已经准备好了
+     *
+     * @return
+     */
+    private static boolean isReady(PsiElement psiElement) {
+        if (psiElement.getManager() == null) {
+            return false;
+        }
+        return psiElement.getParent() != null;
     }
 
     /**

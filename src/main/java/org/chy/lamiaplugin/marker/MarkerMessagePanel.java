@@ -4,6 +4,7 @@ import com.intellij.ide.highlighter.JavaFileType;
 
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.EditorFactory;
+import com.intellij.openapi.fileTypes.PlainTextFileType;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.EditorTextField;
 import com.intellij.ui.components.JBScrollPane;
@@ -27,7 +28,7 @@ public class MarkerMessagePanel extends JPanel {
     public MarkerMessagePanel(Project project) {
         super(new BorderLayout());
 
-        this.editorTextField = new EditorTextField(null, project, JavaFileType.INSTANCE, true);
+        this.editorTextField = new EditorTextField(null, project, PlainTextFileType.INSTANCE, true);
         editorTextField.setOneLineMode(false);
 
         // 创建一个滚动面板并设置视口视图
@@ -51,13 +52,14 @@ public class MarkerMessagePanel extends JPanel {
 
 
     public void fail(String msg, String data) {
-        Document document = EditorFactory.getInstance().createDocument(data);
-        editorTextField.setDocument(document);
+        editorTextField.setFileType(PlainTextFileType.INSTANCE);
+        editorTextField.setText(data);
         markerStatusButton.error(msg);
     }
 
 
     public void success(Document document) {
+        editorTextField.setFileType(JavaFileType.INSTANCE);
         editorTextField.setDocument(document);
         markerStatusButton.success();
     }

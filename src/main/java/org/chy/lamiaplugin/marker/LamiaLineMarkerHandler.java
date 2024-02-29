@@ -26,30 +26,32 @@ public class LamiaLineMarkerHandler {
     private static Map<Project, LamiaLineMarkerHandler> instanceList = new ConcurrentHashMap<>();
 
     private final MarkerMessagePanel markerMessagePanel;
+    private final Project project;
 
     public static LamiaLineMarkerHandler of(Project project) {
         return instanceList.computeIfAbsent(project, LamiaLineMarkerHandler::new);
     }
 
     public LamiaLineMarkerHandler(Project project) {
+        this.project = project;
         this.markerMessagePanel = new MarkerMessagePanel(project);
     }
 
     public void click(MouseEvent event, PsiMethodCallExpression lamiaMethod, boolean isComplete) {
-        showTip("出现----->", event, lamiaMethod, isComplete);
+        showTip(event, lamiaMethod, isComplete);
     }
 
 
-    private void showTip(String msg, MouseEvent event, PsiMethodCallExpression psiElement, boolean isComplete) {
-
-        Project project = psiElement.getProject();
-
+    private void showTip(MouseEvent event, PsiMethodCallExpression psiElement, boolean isComplete) {
         // 用Lamia表达式生成对应的代码
-        LamiaCode lamiaCode = getLamaCode(psiElement, project, isComplete);
+        LamiaCode lamiaCode = getLamaCode(psiElement, isComplete);
 
         // 设置要显示的数据
-        setPanelShowData(lamiaCode, project, psiElement);
+        setPanelShowData(lamiaCode, psiElement);
+        showPanel(event);
+    }
 
+    private void showPanel(MouseEvent event) {
         Insets customInsets = new Insets(0, 0, 0, 0);
         ApplicationManager.getApplication().invokeLater(() -> {
             JBPopupFactory.getInstance().createBalloonBuilder(markerMessagePanel)
@@ -60,10 +62,9 @@ public class LamiaLineMarkerHandler {
                     .setHideOnAction(false)
                     .createBalloon().show(new RelativePoint(event), Balloon.Position.below);
         });
-        //.show(new RelativePoint(event), Balloon.Position.below));
     }
 
-    private void setPanelShowData(LamiaCode lamiaCode, Project project, PsiMethodCallExpression psiElement) {
+    private void setPanelShowData(LamiaCode lamiaCode, PsiMethodCallExpression psiElement) {
         if (!lamiaCode.success) {
             markerMessagePanel.fail("Conversion failed", lamiaCode.data);
             return;
@@ -94,7 +95,7 @@ public class LamiaLineMarkerHandler {
         }
     }
 
-    private LamiaCode getLamaCode(PsiMethodCallExpression psiElement, Project project, boolean isComplete) {
+    private LamiaCode getLamaCode(PsiMethodCallExpression psiElement, boolean isComplete) {
         // 如果已经知道表达式是不完整的 直接返回对应的提示
         if (!isComplete) {
             return new LamiaCode("Invalid expression, please set the corresponding expression correctly. \n" +
@@ -119,6 +120,12 @@ public class LamiaLineMarkerHandler {
     }
 
 
+    public void showFailMsg(MouseEvent event, String s) {
+        LamiaCode lamiaCode = new LamiaCode(s, false);
+        setPanelShowData(lamiaCode, null);
+        showPanel(event);
+    }
+
     private PsiElement getSpiCodeBlock(PsiElement psiElement) {
         PsiElement data = psiElement.getParent();
         while (true) {
@@ -131,5 +138,6 @@ public class LamiaLineMarkerHandler {
             data = data.getParent();
         }
     }
+
 
 }

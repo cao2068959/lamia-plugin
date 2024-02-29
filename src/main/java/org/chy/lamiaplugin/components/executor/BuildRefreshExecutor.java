@@ -10,6 +10,7 @@ import com.intellij.psi.*;
 import org.chy.lamiaplugin.expression.LamiaExpressionManager;
 import org.chy.lamiaplugin.expression.entity.LamiaExpression;
 import org.chy.lamiaplugin.expression.entity.RelationClassWrapper;
+import org.chy.lamiaplugin.utlis.Wrapper;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,6 +18,8 @@ import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class BuildRefreshExecutor implements BatchExecutor<FileChangeEvent> {
 
@@ -55,7 +58,7 @@ public class BuildRefreshExecutor implements BatchExecutor<FileChangeEvent> {
         Set<LamiaExpression> needRefreshLamiaExpression = new HashSet<>();
         Set<PsiFile> needRefreshFile = new HashSet<>();
         handlerData.forEach((classPath, file) -> {
-            Project project = file.getProject();
+            Project project = safeRead(file::getProject);
             LamiaExpressionManager manager = LamiaExpressionManager.getInstance(project);
             // 查找这个class 参与了哪些 lamia表达式
             Set<RelationClassWrapper> relationLamia = manager.getRelationLamia(classPath);
@@ -83,6 +86,14 @@ public class BuildRefreshExecutor implements BatchExecutor<FileChangeEvent> {
         }
     }
 
+    public <T> T safeRead(Supplier<T> supplier) {
+        Wrapper<T> result = new Wrapper<>();
+        ApplicationManager.getApplication().runReadAction(() -> {
+            T t = supplier.get();
+            result.setData(t);
+        });
+        return result.getData();
+    }
 
     public void setLastModifiedTime(PsiFile file) {
         VirtualFile virtualFile = file.getContainingFile().getVirtualFile();
