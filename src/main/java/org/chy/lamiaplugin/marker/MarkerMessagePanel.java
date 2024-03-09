@@ -23,6 +23,8 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import javax.swing.text.PlainDocument;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.geom.Rectangle2D;
 
 
@@ -30,6 +32,7 @@ public class MarkerMessagePanel extends JPanel {
 
     private final EditorTextField editorTextField;
     private final JPanel toolBar;
+    private final MarkerMessageGutter gutter;
 
     private final JBScrollPane scrollPane;
     private final MarkerStatusButton markerStatusButton;
@@ -42,7 +45,7 @@ public class MarkerMessagePanel extends JPanel {
 
         this.editorTextField = new EditorTextField(null, project, PlainTextFileType.INSTANCE, true);
         editorTextField.setOneLineMode(false);
-        editorTextField.setDisposedWith(()->{
+        editorTextField.setDisposedWith(() -> {
             System.out.println("dispose");
         });
         // 创建一个滚动面板并设置视口视图
@@ -62,6 +65,10 @@ public class MarkerMessagePanel extends JPanel {
         // 将滚动面板添加到面板的中心
         this.add(scrollPane, BorderLayout.CENTER);
         scrollPane.setBorder(null);
+
+        // 创建一个标记消息栏
+        gutter = new MarkerMessageGutter(project);
+        this.add(gutter, BorderLayout.WEST);
     }
 
 
@@ -77,40 +84,31 @@ public class MarkerMessagePanel extends JPanel {
 
         editorTextField.setDocument(document);
         EditorEx editor = editorTextField.getEditor(true);
-
+        gutter.clearLineNumber();
+        int lineHeight = editor.getLineHeight();
+        gutter.setHeight((document.getLineCount() + 1) * 20);
         for (int i = 0; i < document.getLineCount(); i++) {
-            addIcon(document.getLineEndOffset(i), editor);
-            highlightLine(i, editor);
+            markErrorLine(i, document, editor);
         }
-
-
         markerStatusButton.success();
     }
 
-    private void addIcon(int offset, EditorEx editor) {
-        editor.getInlayModel().addAfterLineEndElement(offset, true, new EditorCustomElementRenderer() {
-            private final Icon icon = AllIcons.CodeWithMe.CwmTerminate; // 你可以替换为你自己的图标
+    private void markErrorLine(int lineNumber, Document document, EditorEx editor) {
+        if (editor == null) {
+            return;
+        }
+        int lineStartOffset = document.getLineStartOffset(lineNumber);
+        VisualPosition visualPosition = editor.offsetToVisualPosition(lineStartOffset);
+        Point point = editor.visualPositionToXY(visualPosition);
+        lineNumber(lineNumber, point);
 
-            @Override
-            public int calcWidthInPixels(@NotNull Inlay inlay) {
-                return icon.getIconWidth();
-            }
+/*        editor.getInlayModel().addAfterLineEndElement(document.getLineEndOffset(lineNumber), true,
+                new EditorCustomIcon(AllIcons.General.Information, project));*/
+        //highlightLine(lineNumber, editor);
+    }
 
-            @Override
-            public int calcHeightInPixels(@NotNull Inlay inlay) {
-                return icon.getIconHeight();
-            }
-
-            @Override
-            public void paint(@NotNull Inlay inlay, @NotNull Graphics2D g, @NotNull Rectangle2D targetRegion, @NotNull TextAttributes textAttributes) {
-                EditorCustomElementRenderer.super.paint(inlay, g, targetRegion, textAttributes);
-            }
-
-            @Override
-            public void paint(@NotNull Inlay inlay, @NotNull Graphics g, @NotNull Rectangle targetRegion, @NotNull TextAttributes textAttributes) {
-                icon.paintIcon(null, g, targetRegion.x, targetRegion.y);
-            }
-        });
+    private void lineNumber(int lineNumber, Point point) {
+        gutter.setLineNumber(lineNumber, point);
     }
 
     public void highlightLine(int lineNumber, EditorEx editor) {
