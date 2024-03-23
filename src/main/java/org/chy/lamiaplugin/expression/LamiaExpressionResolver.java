@@ -12,6 +12,7 @@ import com.chy.lamia.convert.core.expression.parse.builder.BuilderHandler;
 import com.intellij.psi.*;
 import com.siyeh.ig.psiutils.MethodCallUtils;
 import org.chy.lamiaplugin.expression.entity.PsiMethodWrapper;
+import org.chy.lamiaplugin.expression.entity.VarArgWrapper;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -37,7 +38,7 @@ public class LamiaExpressionResolver {
 
         PsiLocalVariable localVariable = getLocalVariable(lastMethodCall);
         if (localVariable != null) {
-            result.setVarName(localVariable.getName());
+            result.setResultVarName(localVariable.getName());
         }
         return result;
     }
@@ -158,11 +159,10 @@ public class LamiaExpressionResolver {
 
     private void initPsiMethodWrapper(PsiMethodWrapper psiMethodWrapper, LamiaConvertInfo convertInfo) {
         psiMethodWrapper.initArgs(psiArgWrapper -> {
-            PsiVariable psiVariable = psiArgWrapper.getPsiVariable();
-            PsiType type = psiVariable.getType();
-            convertInfo.addVarArgs(new VarDefinition(psiVariable.getName(), new TypeDefinition(type.getCanonicalText())));
+            if (psiArgWrapper instanceof VarArgWrapper varArgWrapper) {
+                convertInfo.addVarArgs(new VarDefinition(varArgWrapper.getName(), new TypeDefinition(varArgWrapper.getVarType())));
+            }
         });
-
     }
 
 
@@ -173,7 +173,7 @@ public class LamiaExpressionResolver {
                 return null;
             }
             if (psiElement instanceof PsiLocalVariable || psiElement instanceof PsiCodeBlock ||
-                    psiElement instanceof PsiStatement) {
+                    psiElement instanceof PsiStatement || psiElement instanceof PsiLambdaExpression) {
                 return null;
             }
             if (psiElement instanceof PsiMethodCallExpression result) {

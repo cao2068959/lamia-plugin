@@ -54,13 +54,16 @@ public class LamiaLineMarkerHandler {
     private void showPanel(MouseEvent event) {
         Insets customInsets = new Insets(0, 0, 0, 0);
         ApplicationManager.getApplication().invokeLater(() -> {
-            JBPopupFactory.getInstance().createBalloonBuilder(markerMessagePanel)
+            Balloon balloon = JBPopupFactory.getInstance().createBalloonBuilder(markerMessagePanel)
                     .setAnimationCycle(10)
                     .setBorderInsets(customInsets)
                     .setBorderColor(Color.GRAY)
                     .setShadow(true)
                     .setHideOnAction(false)
-                    .createBalloon().show(new RelativePoint(event), Balloon.Position.below);
+                    .createBalloon();
+
+            markerMessagePanel.setBalloon(balloon);
+            balloon.show(new RelativePoint(event), Balloon.Position.below);
         });
     }
 
@@ -75,14 +78,15 @@ public class LamiaLineMarkerHandler {
         // 把这个转换语句放入代码块中用于显示
         JavaCodeFragmentFactory fragmentFactory = JavaCodeFragmentFactory.getInstance(project);
         JavaCodeFragment code = fragmentFactory.createCodeBlockCodeFragment(lamiaCode.getData(), parentMethod, true);
-
+        code.forceResolveScope(psiElement.getResolveScope());
+        code.getThisType()
         // 有一个 外部 import的 把他放入到 JavaCodeFragment
-        Set<String> importClassPath = lamiaCode.importClassPath;
+  /*      Set<String> importClassPath = lamiaCode.importClassPath;
         if (importClassPath != null && !importClassPath.isEmpty()) {
             for (String importClass : importClassPath) {
                 code.addImportsFromString(importClass);
             }
-        }
+        }*/
         Document document = documentManager.getDocument(code);
         markerMessagePanel.success(document);
 

@@ -30,4 +30,6 @@ public class PsiTypeUtils {
         return projectFileIndex.isInSourceContent(virtualFile);
     }
 
+
+
 }

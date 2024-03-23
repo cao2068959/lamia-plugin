@@ -1,5 +1,6 @@
 package org.chy.lamiaplugin.marker;
 
+import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.project.Project;
 
 import javax.swing.*;
@@ -11,29 +12,34 @@ public class MarkerMessageGutter extends JPanel {
 
     private final Project project;
 
-    Map<Integer, JLabel> lineNumbers = new HashMap<>();
+    Map<Integer, AnAction> allButton = new HashMap<>();
+
+    MarkerMessagePanel parentPanel;
 
     int width = 30;
 
-    public MarkerMessageGutter(Project project) {
+    public MarkerMessageGutter(MarkerMessagePanel parentPanel, Project project) {
         super(null);
         setPreferredSize(new Dimension(width, getPreferredSize().height));
-        setBackground(Color.RED);
         this.project = project;
+        this.parentPanel = parentPanel;
     }
 
     public void setHeight(int height) {
         setPreferredSize(new Dimension(width, height));
     }
 
-    public synchronized void clearLineNumber() {
-        lineNumbers = new HashMap<>();
+
+    public synchronized void clear() {
+        // 清除所有的标志
+        this.removeAll();
+        allButton.clear();
     }
 
-    public synchronized void setLineNumber(int lineNumber, Point point) {
-        JLabel label = new JLabel(lineNumber + "");
-        label.setBounds(5, point.y + 5, 20, 10);
-        lineNumbers.put(lineNumber, label);
-        add(label);
+    public synchronized void addButton(int lineNumber, Point point) {
+        ErrorTypeConvertButton button = new ErrorTypeConvertButton(parentPanel);
+        button.setBound(5, point.y);
+        allButton.put(lineNumber, button);
+        add(button.actionButton);
     }
 }

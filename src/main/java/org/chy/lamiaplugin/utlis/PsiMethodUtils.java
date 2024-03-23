@@ -1,6 +1,7 @@
 package org.chy.lamiaplugin.utlis;
 
 import com.chy.lamia.convert.core.annotation.LamiaMapping;
+import com.chy.lamia.convert.core.utils.struct.Pair;
 import com.chy.lamia.expose.Lamia;
 import com.chy.lamia.utils.Lists;
 import com.intellij.psi.*;
@@ -248,6 +249,25 @@ public class PsiMethodUtils {
             }
         }
         return null;
+    }
+
+    /**
+     * 获取方法引用的类名和方法名
+     * @param methodReferenceExpression
+     * @return
+     */
+    public static Pair<String, String> getMethodReferenceInfo(PsiMethodReferenceExpression methodReferenceExpression) {
+        PsiMethod method = (PsiMethod) methodReferenceExpression.resolve();
+        if (method == null) {
+            return null;
+        }
+        PsiClass containingClass = method.getContainingClass();
+        if (containingClass == null){
+            return null;
+        }
+        String className = method.getContainingClass().getQualifiedName();
+        String methodName = methodReferenceExpression.getReferenceName();
+        return new Pair<>(className, methodName);
     }
 
 }

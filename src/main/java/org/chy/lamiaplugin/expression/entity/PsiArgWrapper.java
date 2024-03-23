@@ -1,5 +1,6 @@
 package org.chy.lamiaplugin.expression.entity;
 
+import com.chy.lamia.convert.core.components.entity.Expression;
 import com.chy.lamia.convert.core.expression.parse.entity.ArgWrapper;
 import com.intellij.psi.PsiVariable;
 
@@ -7,21 +8,15 @@ import java.util.function.Consumer;
 
 public class PsiArgWrapper extends ArgWrapper {
 
-    PsiVariable psiVariable;
-
     Consumer<PsiArgWrapper> useFun;
+
+    public PsiArgWrapper(Expression expression, String name) {
+        super(expression, name);
+    }
 
     @Override
     public void use() {
         useFun.accept(this);
-    }
-
-    public PsiVariable getPsiVariable() {
-        return psiVariable;
-    }
-
-    public void setPsiVariable(PsiVariable psiVariable) {
-        this.psiVariable = psiVariable;
     }
 
     public Consumer<PsiArgWrapper> getUseFun() {

@@ -12,8 +12,11 @@ import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.fileTypes.PlainTextFileType;
 import com.intellij.openapi.editor.ex.EditorEx;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.popup.Balloon;
+import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.ui.EditorTextField;
+import com.intellij.ui.awt.RelativePoint;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBScrollPane;
 import org.chy.lamiaplugin.expression.entity.LamiaExpression;
@@ -37,6 +40,7 @@ public class MarkerMessagePanel extends JPanel {
     private final JBScrollPane scrollPane;
     private final MarkerStatusButton markerStatusButton;
     private final Project project;
+    private Balloon balloon;
 
 
     public MarkerMessagePanel(Project project) {
@@ -67,7 +71,7 @@ public class MarkerMessagePanel extends JPanel {
         scrollPane.setBorder(null);
 
         // 创建一个标记消息栏
-        gutter = new MarkerMessageGutter(project);
+        gutter = new MarkerMessageGutter(this, project);
         this.add(gutter, BorderLayout.WEST);
     }
 
@@ -84,7 +88,7 @@ public class MarkerMessagePanel extends JPanel {
 
         editorTextField.setDocument(document);
         EditorEx editor = editorTextField.getEditor(true);
-        gutter.clearLineNumber();
+        gutter.clear();
         int lineHeight = editor.getLineHeight();
         gutter.setHeight((document.getLineCount() + 1) * 20);
         for (int i = 0; i < document.getLineCount(); i++) {
@@ -100,16 +104,9 @@ public class MarkerMessagePanel extends JPanel {
         int lineStartOffset = document.getLineStartOffset(lineNumber);
         VisualPosition visualPosition = editor.offsetToVisualPosition(lineStartOffset);
         Point point = editor.visualPositionToXY(visualPosition);
-        lineNumber(lineNumber, point);
-
-/*        editor.getInlayModel().addAfterLineEndElement(document.getLineEndOffset(lineNumber), true,
-                new EditorCustomIcon(AllIcons.General.Information, project));*/
-        //highlightLine(lineNumber, editor);
+        gutter.addButton(lineNumber, point);
     }
 
-    private void lineNumber(int lineNumber, Point point) {
-        gutter.setLineNumber(lineNumber, point);
-    }
 
     public void highlightLine(int lineNumber, EditorEx editor) {
         Document document = editor.getDocument();
@@ -139,4 +136,19 @@ public class MarkerMessagePanel extends JPanel {
         markerStatusButton.unassociated(lamiaExpression);
     }
 
+
+    public void closeBalloon() {
+        if (balloon == null || balloon.isDisposed()) {
+            return;
+        }
+        balloon.hide();
+    }
+
+    public Balloon getBalloon() {
+        return balloon;
+    }
+
+    public void setBalloon(Balloon balloon) {
+        this.balloon = balloon;
+    }
 }
