@@ -75,22 +75,22 @@ public class LamiaLineMarkerHandler {
         PsiDocumentManager documentManager = PsiDocumentManager.getInstance(project);
         PsiElement parentMethod = getSpiCodeBlock(psiElement);
 
+
         // 把这个转换语句放入代码块中用于显示
         JavaCodeFragmentFactory fragmentFactory = JavaCodeFragmentFactory.getInstance(project);
         JavaCodeFragment code = fragmentFactory.createCodeBlockCodeFragment(lamiaCode.getData(), parentMethod, true);
-        code.forceResolveScope(psiElement.getResolveScope());
-        code.getThisType()
         // 有一个 外部 import的 把他放入到 JavaCodeFragment
-  /*      Set<String> importClassPath = lamiaCode.importClassPath;
+        Set<String> importClassPath = lamiaCode.importClassPath;
         if (importClassPath != null && !importClassPath.isEmpty()) {
             for (String importClass : importClassPath) {
                 code.addImportsFromString(importClass);
             }
-        }*/
+        }
         Document document = documentManager.getDocument(code);
-        markerMessagePanel.success(document);
+        markerMessagePanel.success(document, lamiaCode.getAbnormalData(), psiElement);
 
-        // 去检查这个 表达式是否已经关联上了
+
+        // 去检查这个 表达式是否已经关联上了, 如果没有左上角显示感叹号
         LamiaExpressionManager manager = LamiaExpressionManager.getInstance(project);
         LamiaExpression lamiaExpression = new LamiaExpression(psiElement);
         Set<RelationClassWrapper> relation = manager.getRelation(lamiaExpression);
@@ -117,6 +117,7 @@ public class LamiaLineMarkerHandler {
         if (lamiaConvertResult.isSuccess()) {
             LamiaCode lamiaCode = new LamiaCode(lamiaConvertResult.getData(), true);
             lamiaCode.setImportClassPath(lamiaConvertResult.getImportClassPath());
+            lamiaCode.setAbnormalData(lamiaConvertResult.getAbnormalData());
             return lamiaCode;
         }
         return new LamiaCode(lamiaConvertResult.getMsg(), false);
@@ -133,8 +134,8 @@ public class LamiaLineMarkerHandler {
     private PsiElement getSpiCodeBlock(PsiElement psiElement) {
         PsiElement data = psiElement.getParent();
         while (true) {
-            if (data instanceof PsiCodeBlock method) {
-                return method;
+            if (data instanceof PsiCodeBlock || psiElement instanceof PsiLambdaExpression) {
+                return psiElement;
             }
             if (data == null || data instanceof PsiClass || data instanceof PsiFile) {
                 return null;

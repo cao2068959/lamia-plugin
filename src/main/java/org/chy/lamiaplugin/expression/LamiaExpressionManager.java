@@ -7,7 +7,9 @@ import com.chy.lamia.convert.core.components.NameHandler;
 import com.chy.lamia.convert.core.components.TreeFactory;
 import com.chy.lamia.convert.core.components.TypeResolverFactory;
 import com.chy.lamia.convert.core.components.entity.Expression;
+import com.chy.lamia.convert.core.components.entity.NewlyStatementHolder;
 import com.chy.lamia.convert.core.components.entity.Statement;
+import com.chy.lamia.convert.core.entity.AbnormalVar;
 import com.chy.lamia.convert.core.entity.LamiaConvertInfo;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
@@ -82,7 +84,7 @@ public class LamiaExpressionManager {
                 LOG.warn("解析表达式失败", e);
                 throw new LamiaConvertException("Parsing expression failed!!");
             });
-            List<Statement> makeResult = convertFactory.make(lamiaConvertInfo);
+            List<NewlyStatementHolder> makeResult = convertFactory.make(lamiaConvertInfo);
             return convert(makeResult);
 
         } catch (Exception e) {
@@ -113,14 +115,24 @@ public class LamiaExpressionManager {
     }
 
 
-    private ConvertResult convert(List<Statement> statements) {
+    private ConvertResult convert(List<NewlyStatementHolder> statements) {
         StringBuilder code = new StringBuilder();
         Set<String> allImportClass = new HashSet<>();
-        for (Statement statement : statements) {
-            code.append(convertStatement(statement, allImportClass)).append("\n");
+        Map<Integer, Set<AbnormalVar>> abnormal = new HashMap<>();
+        for (int i = 0; i < statements.size(); i++) {
+            NewlyStatementHolder holder = statements.get(i);
+            Set<AbnormalVar> abnormalVars = holder.getAbnormalVars();
+            // 某行可能存在异常数据
+            if (!abnormalVars.isEmpty()) {
+                abnormal.put(i, abnormalVars);
+            }
+        }
+        for (NewlyStatementHolder statement : statements) {
+            code.append(convertStatement(statement.getStatement(), allImportClass)).append("\n");
         }
         ConvertResult result = ConvertResult.success(code.toString());
         result.setImportClassPath(allImportClass);
+        result.setAbnormalData(abnormal);
         return result;
     }
 

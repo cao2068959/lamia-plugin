@@ -1,7 +1,8 @@
-package org.chy.lamiaplugin.marker;
+package org.chy.lamiaplugin.marker.gutter;
 
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.project.Project;
+import org.chy.lamiaplugin.marker.MarkerMessagePanel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -36,9 +37,9 @@ public class MarkerMessageGutter extends JPanel {
         allButton.clear();
     }
 
-    public synchronized void addButton(int lineNumber, Point point) {
-        ErrorTypeConvertButton button = new ErrorTypeConvertButton(parentPanel);
+    public synchronized void addButton(int lineNumber, Point point, GutterButton button) {
         button.setBound(5, point.y);
+        button.setParentPanel(parentPanel);
         allButton.put(lineNumber, button);
         add(button.actionButton);
     }

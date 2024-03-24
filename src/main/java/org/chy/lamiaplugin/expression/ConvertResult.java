@@ -1,5 +1,8 @@
 package org.chy.lamiaplugin.expression;
 
+import com.chy.lamia.convert.core.entity.AbnormalVar;
+
+import java.util.Map;
 import java.util.Set;
 
 public class ConvertResult {
@@ -7,6 +10,8 @@ public class ConvertResult {
     String data;
 
     Set<String> importClassPath;
+
+    Map<Integer, Set<AbnormalVar>> abnormalData;
 
     boolean success;
     String msg;
@@ -56,5 +61,13 @@ public class ConvertResult {
 
     public void setImportClassPath(Set<String> importClassPath) {
         this.importClassPath = importClassPath;
+    }
+
+    public Map<Integer, Set<AbnormalVar>> getAbnormalData() {
+        return abnormalData;
+    }
+
+    public void setAbnormalData(Map<Integer, Set<AbnormalVar>> abnormalData) {
+        this.abnormalData = abnormalData;
     }
 }

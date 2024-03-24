@@ -9,8 +9,13 @@ import com.chy.lamia.convert.core.entity.VarDefinition;
 import com.chy.lamia.convert.core.expression.parse.ConfigParseContext;
 import com.chy.lamia.convert.core.expression.parse.builder.BuilderContext;
 import com.chy.lamia.convert.core.expression.parse.builder.BuilderHandler;
+import com.chy.lamia.convert.core.expression.parse.builder.handler.BuilderArgsUse;
+import com.chy.lamia.convert.core.expression.parse.builder.handler.rule.RuleHandler;
+import com.chy.lamia.convert.core.expression.parse.entity.ArgWrapper;
 import com.intellij.psi.*;
 import com.siyeh.ig.psiutils.MethodCallUtils;
+import org.chy.lamiaplugin.exception.LamiaConvertException;
+import org.chy.lamiaplugin.expression.entity.ClassAccessArgWrapper;
 import org.chy.lamiaplugin.expression.entity.PsiMethodWrapper;
 import org.chy.lamiaplugin.expression.entity.VarArgWrapper;
 
@@ -26,7 +31,8 @@ public class LamiaExpressionResolver {
         if (lamiaExpressionAndLastSpi == null) {
             return result;
         }
-        result.setLamiaExpression(lamiaExpressionAndLastSpi.getKey());
+        LamiaExpression lamiaExpression = lamiaExpressionAndLastSpi.getKey();
+        result.setLamiaExpression(lamiaExpression);
 
         // 这里拿到的应该是最后一层的方法调用
         PsiElement lastMethodCall = lamiaExpressionAndLastSpi.getValue();
@@ -87,7 +93,8 @@ public class LamiaExpressionResolver {
             LamiaExpression result = new LamiaExpression();
             initPsiMethodWrapper(psiMethodWrapper, convertInfo);
             List<String> argsNames = psiMethodWrapper.useAllArgsToName();
-            result.addSpreadArgs(argsNames, null);
+            result.addSpreadArgs(argsNames);
+            result.updateBuild().setHolder(methodCall);
             return new Pair<>(result, methodCall);
         }
         if ("setField".equals(name)) {
@@ -95,6 +102,7 @@ public class LamiaExpressionResolver {
             initPsiMethodWrapper(psiMethodWrapper, convertInfo);
             List<String> argsNames = psiMethodWrapper.useAllArgsToName();
             result.addArgs(argsNames);
+            result.updateBuild().setHolder(methodCall);
             return new Pair<>(result, methodCall);
         }
 
@@ -123,8 +131,14 @@ public class LamiaExpressionResolver {
                 throw new RuntimeException("[LamiaExpressionResolver] 无法找到 配置处理器 key: [" + key + "]");
             }
 
+            // 如果是 mapping / setFiled 这种结束handler，那么记录一下 对应当前的句柄，方便后续修改表达式
+            if (handler instanceof BuilderArgsUse){
+                result.getBuildInfo().setHolder(methodCallWrapper.getMethodCallExpression());
+            }
             // 执行handler策略
             handler.config(result, methodCallWrapper, context);
+
+
 
             // 获取链式调用的下一个方法
             PsiMethodCallExpression psiMethodCallExpression = nextMethodCall(methodCallWrapper.getMethodCallExpression());
@@ -147,14 +161,25 @@ public class LamiaExpressionResolver {
         if (!"build".equals(methodCallWrapper.getName())) {
             return;
         }
-        Expression expression = methodCallWrapper.useOnlyArgs();
-        if (expression == null) {
+        ArgWrapper wrapper = methodCallWrapper.useOnlyArgsWrapper();
+        if (wrapper == null) {
             return;
         }
-        String target = expression.get().toString();
-        VarDefinition varDefinition = convertInfo.getArgs().get(target);
-        convertInfo.setTarget(varDefinition);
-        convertInfo.setTargetType(varDefinition.getType());
+
+        if (wrapper instanceof VarArgWrapper varArgWrapper) {
+            String target = varArgWrapper.getName();
+            VarDefinition varDefinition = convertInfo.getArgs().get(target);
+            if (varDefinition == null) {
+                throw new LamiaConvertException("找不到对应的变量定义: " + target);
+            }
+            convertInfo.setTarget(varDefinition);
+            return;
+        }
+
+        if (wrapper instanceof ClassAccessArgWrapper accessArgWrapper) {
+            convertInfo.setTargetType(new TypeDefinition(accessArgWrapper.getClassPath()));
+            return;
+        }
     }
 
     private void initPsiMethodWrapper(PsiMethodWrapper psiMethodWrapper, LamiaConvertInfo convertInfo) {

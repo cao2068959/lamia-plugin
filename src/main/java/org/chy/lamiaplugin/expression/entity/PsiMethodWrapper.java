@@ -59,6 +59,11 @@ public class PsiMethodWrapper extends MethodWrapper {
             result.setVarType(type.getCanonicalText());
             return result;
         }
+        if (expression instanceof PsiClassObjectAccessExpression accessExpression) {
+            String type = accessExpression.getOperand().getType().getCanonicalText();
+            return new ClassAccessArgWrapper(new StringExpression(type), type);
+        }
+
         return null;
     }
 

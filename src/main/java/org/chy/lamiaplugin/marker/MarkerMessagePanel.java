@@ -1,9 +1,8 @@
 package org.chy.lamiaplugin.marker;
 
-import com.intellij.icons.AllIcons;
+import com.chy.lamia.convert.core.entity.AbnormalVar;
 import com.intellij.ide.highlighter.JavaFileType;
 
-import com.intellij.openapi.Disposable;
 import com.intellij.openapi.editor.*;
 import com.intellij.openapi.editor.markup.EffectType;
 import com.intellij.openapi.editor.markup.HighlighterLayer;
@@ -13,22 +12,19 @@ import com.intellij.openapi.fileTypes.PlainTextFileType;
 import com.intellij.openapi.editor.ex.EditorEx;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.Balloon;
-import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.ui.EditorTextField;
-import com.intellij.ui.awt.RelativePoint;
-import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBScrollPane;
 import org.chy.lamiaplugin.expression.entity.LamiaExpression;
-import org.jetbrains.annotations.NotNull;
+import org.chy.lamiaplugin.marker.gutter.ErrorTypeConvertButton;
+import org.chy.lamiaplugin.marker.gutter.MarkerMessageGutter;
 
 
 import javax.swing.*;
-import javax.swing.text.PlainDocument;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.geom.Rectangle2D;
+import java.util.Map;
+import java.util.Set;
 
 
 public class MarkerMessagePanel extends JPanel {
@@ -83,28 +79,50 @@ public class MarkerMessagePanel extends JPanel {
     }
 
 
-    public void success(Document document) {
+    public void success(Document document, Map<Integer, Set<AbnormalVar>> abnormalData, PsiMethodCallExpression psiElement) {
         editorTextField.setFileType(JavaFileType.INSTANCE);
 
         editorTextField.setDocument(document);
         EditorEx editor = editorTextField.getEditor(true);
         gutter.clear();
-        int lineHeight = editor.getLineHeight();
         gutter.setHeight((document.getLineCount() + 1) * 20);
-        for (int i = 0; i < document.getLineCount(); i++) {
-            markErrorLine(i, document, editor);
-        }
+        // 设置一些错误提示
+        setAbnormal(document, editor, abnormalData, psiElement);
+
         markerStatusButton.success();
     }
 
-    private void markErrorLine(int lineNumber, Document document, EditorEx editor) {
+    private void setAbnormal(Document document, EditorEx editor,
+                             Map<Integer, Set<AbnormalVar>> abnormalData,
+                             PsiMethodCallExpression psiElement) {
         if (editor == null) {
             return;
         }
+        if (abnormalData == null || abnormalData.isEmpty()) {
+            return;
+        }
+        abnormalData.forEach((line, abnormalVars) -> {
+            if (abnormalVars.isEmpty()) {
+                return;
+            }
+            AbnormalVar abnormalVar = abnormalVars.stream().findFirst().get();
+            markErrorLine(line, document, editor, abnormalVar, psiElement);
+        });
+    }
+
+    private void markErrorLine(int lineNumber, Document document, EditorEx editor,
+                               AbnormalVar abnormalVar, PsiMethodCallExpression psiElement) {
+        // 把一行高亮，下面又下划线
+        highlightLine(lineNumber, editor);
         int lineStartOffset = document.getLineStartOffset(lineNumber);
         VisualPosition visualPosition = editor.offsetToVisualPosition(lineStartOffset);
         Point point = editor.visualPositionToXY(visualPosition);
-        gutter.addButton(lineNumber, point);
+
+        // 这一行转换类型异常，搞一个按钮
+        ErrorTypeConvertButton button = new ErrorTypeConvertButton(abnormalVar, psiElement);
+        // 把这一行添加一个图标
+        gutter.addButton(lineNumber, point, button);
+
     }
 
 
@@ -150,5 +168,9 @@ public class MarkerMessagePanel extends JPanel {
 
     public void setBalloon(Balloon balloon) {
         this.balloon = balloon;
+    }
+
+    public Project getProject() {
+        return project;
     }
 }

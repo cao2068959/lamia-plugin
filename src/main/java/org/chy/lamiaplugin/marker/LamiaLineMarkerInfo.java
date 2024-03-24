@@ -77,6 +77,7 @@ public class LamiaLineMarkerInfo<T extends PsiElement> extends LineMarkerInfo<T>
                 return lamiaMethod;
             }
             PsiMethodCallExpression methodCall = PsiMethodUtils.getMethodCall(lineMarkerInfo.getElement());
+            methodCall = PsiMethodUtils.getLamiaStartExpression(methodCall);
             if (methodCall == null) {
                 throw new LamiaException("The current expression has expired, but a new expression reference cannot be found \n " +
                         "If there must be a bug, please contact the author for modification\n" +
