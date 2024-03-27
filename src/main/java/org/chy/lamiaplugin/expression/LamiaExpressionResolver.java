@@ -93,16 +93,17 @@ public class LamiaExpressionResolver {
             LamiaExpression result = new LamiaExpression();
             initPsiMethodWrapper(psiMethodWrapper, convertInfo);
             List<String> argsNames = psiMethodWrapper.useAllArgsToName();
-            result.addSpreadArgs(argsNames);
             result.updateBuild().setHolder(methodCall);
+            result.addSpreadArgs(argsNames);
             return new Pair<>(result, methodCall);
         }
         if ("setField".equals(name)) {
             LamiaExpression result = new LamiaExpression();
             initPsiMethodWrapper(psiMethodWrapper, convertInfo);
             List<String> argsNames = psiMethodWrapper.useAllArgsToName();
-            result.addArgs(argsNames);
             result.updateBuild().setHolder(methodCall);
+            result.addArgs(argsNames);
+
             return new Pair<>(result, methodCall);
         }
 

@@ -1,6 +1,8 @@
 package org.chy.lamiaplugin.marker.gutter;
 
 import com.chy.lamia.convert.core.entity.AbnormalVar;
+import com.chy.lamia.convert.core.entity.BuildInfo;
+import com.chy.lamia.convert.core.entity.TypeDefinition;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.command.WriteCommandAction;
@@ -12,6 +14,7 @@ import com.intellij.openapi.ui.popup.util.BaseListPopupStep;
 import com.intellij.psi.PsiElementFactory;
 import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.ui.awt.RelativePoint;
+import org.chy.lamiaplugin.utlis.LamiaPsiUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -42,13 +45,18 @@ public class ErrorTypeConvertButton extends GutterButton {
         //closeBalloon();
     }
 
-    public void addIgnoreExpression(){
-        PsiElementFactory psiElementFactory = PsiElementFactory.getInstance(parentPanel.getProject());
+    public void addIgnoreExpression() {
 
-        WriteCommandAction.runWriteCommandAction(lamiaExpression.getProject(), () -> {
-            PsiMethodCallExpression newCall = (PsiMethodCallExpression) psiElementFactory.createExpressionFromText("bar()", null);
-            lamiaExpression.replace(newCall);
-        });
+        TypeDefinition instanceType = abnormalVar.getInstanceType();
+        String text = ".ignoreField(" + instanceType.simpleClassName() + "::" + getGetter(abnormalVar.getVarName()) + ")";
+        BuildInfo errorArgBuildInfo = abnormalVar.getErrorMaterial().getBuildInfo();
+        LamiaPsiUtils.insertRule(errorArgBuildInfo, text, parentPanel.getProject());
+
+
+    }
+
+    private String getGetter(String name) {
+        return "get" + name.substring(0, 1).toUpperCase() + name.substring(1);
     }
 
 

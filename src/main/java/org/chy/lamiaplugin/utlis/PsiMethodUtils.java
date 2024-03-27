@@ -77,11 +77,17 @@ public class PsiMethodUtils {
     }
 
     public static PsiMethodCallExpression getMethodCallExpressionFromChildren(PsiElement psiElement, int deep) {
-        if (psiElement instanceof PsiMethodCallExpression methodCallExpression) {
-            return methodCallExpression;
-        }
-        PsiElement[] children = psiElement.getChildren();
+        return getMethodCallExpressionFromChildren(psiElement, true, deep);
+    }
 
+    public static PsiMethodCallExpression getMethodCallExpressionFromChildren(PsiElement psiElement, boolean returnIfSelfIsMce, int deep) {
+        if (returnIfSelfIsMce) {
+            if (psiElement instanceof PsiMethodCallExpression methodCallExpression) {
+                return methodCallExpression;
+            }
+        }
+
+        PsiElement[] children = psiElement.getChildren();
         List<PsiElement> next = new ArrayList<>();
         for (PsiElement child : children) {
             if (child instanceof PsiMethodCallExpression methodCallExpression) {
@@ -97,7 +103,6 @@ public class PsiMethodUtils {
                 }
             }
         }
-
         return null;
     }
 
@@ -162,7 +167,29 @@ public class PsiMethodUtils {
         }
     }
 
-    private static PsiElement getReferenceOrMethodCallByChildren(PsiElement psiElement) {
+
+    public static PsiReferenceExpression getLamiaStartReference(PsiElement psiElement) {
+        PsiElement element = psiElement;
+        while (true) {
+            element = getReferenceOrMethodCallByChildren(element);
+            if (element == null) {
+                return null;
+            }
+
+            if (element instanceof PsiReferenceExpression referenceExpression) {
+                String text = element.getText();
+                if ("Lamia".equals(text)) {
+                    return referenceExpression;
+                }
+            }
+
+            if (element instanceof PsiCodeBlock || psiElement instanceof PsiLambdaExpression) {
+                return null;
+            }
+        }
+    }
+
+    public static PsiElement getReferenceOrMethodCallByChildren(PsiElement psiElement) {
         PsiElement[] children = psiElement.getChildren();
         for (PsiElement child : children) {
             if (child instanceof PsiReferenceExpression result) {
@@ -253,6 +280,7 @@ public class PsiMethodUtils {
 
     /**
      * 获取方法引用的类名和方法名
+     *
      * @param methodReferenceExpression
      * @return
      */
@@ -262,7 +290,7 @@ public class PsiMethodUtils {
             return null;
         }
         PsiClass containingClass = method.getContainingClass();
-        if (containingClass == null){
+        if (containingClass == null) {
             return null;
         }
         String className = method.getContainingClass().getQualifiedName();
