@@ -1,6 +1,8 @@
 package org.chy.lamiaplugin.expression.entity;
 
 import com.chy.lamia.convert.core.components.entity.Expression;
+import com.chy.lamia.convert.core.entity.MethodParameterWrapper;
+import com.chy.lamia.convert.core.entity.TypeDefinition;
 import com.chy.lamia.convert.core.expression.parse.entity.ArgWrapper;
 
 import java.util.function.Consumer;
@@ -8,7 +10,9 @@ import java.util.function.Consumer;
 public class VarArgWrapper extends PsiArgWrapper {
 
     String varName;
-    String varType;
+    TypeDefinition varType;
+
+    boolean isMethodInvoke = false;
 
 
     public VarArgWrapper(Expression expression, String name) {
@@ -16,11 +20,20 @@ public class VarArgWrapper extends PsiArgWrapper {
         this.varName = name;
     }
 
-    public String getVarType() {
+
+    public boolean isMethodInvoke() {
+        return isMethodInvoke;
+    }
+
+    public void setMethodInvoke(boolean methodInvoke) {
+        isMethodInvoke = methodInvoke;
+    }
+
+    public TypeDefinition getVarType() {
         return varType;
     }
 
-    public void setVarType(String varType) {
+    public void setVarType(TypeDefinition varType) {
         this.varType = varType;
     }
 }

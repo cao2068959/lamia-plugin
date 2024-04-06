@@ -49,9 +49,8 @@ public class ErrorTypeConvertButton extends GutterButton {
 
         TypeDefinition instanceType = abnormalVar.getInstanceType();
         String text = ".ignoreField(" + instanceType.simpleClassName() + "::" + getGetter(abnormalVar.getVarName()) + ")";
-        BuildInfo errorArgBuildInfo = abnormalVar.getErrorMaterial().getBuildInfo();
+        BuildInfo errorArgBuildInfo = abnormalVar.getErrorMaterial().getProtoMaterialInfo().getBuildInfo();
         LamiaPsiUtils.insertRule(errorArgBuildInfo, text, parentPanel.getProject());
-
 
     }
 

@@ -3,6 +3,7 @@ package org.chy.lamiaplugin.expression.components;
 import com.chy.lamia.convert.core.components.TreeFactory;
 import com.chy.lamia.convert.core.components.entity.Expression;
 import com.chy.lamia.convert.core.components.entity.Statement;
+import com.chy.lamia.convert.core.entity.TypeDefinition;
 import org.chy.lamiaplugin.expression.components.statement.IfStatement;
 import org.chy.lamiaplugin.expression.components.statement.StringStatement;
 
@@ -20,9 +21,18 @@ public class StringTreeFactory implements TreeFactory {
     }
 
     @Override
-    public Statement createVar(String instantName, String classPath, Expression newClass) {
-        String value = toString(newClass);
+    public Statement createVar(String instantName, String classPath, Expression expression) {
+        String value = toString(expression);
         ClassPathResult classPathResult = classPathHandle(classPath);
+        StringStatement stringStatement = new StringStatement(classPathResult.simpleClassPath + " " + instantName + " = " + value);
+        classPathResult.allClassPath.forEach(stringStatement::addImportClassPath);
+        return stringStatement;
+    }
+
+    @Override
+    public Statement createVar(String instantName, TypeDefinition type, Expression expression) {
+        String value = toString(expression);
+        ClassPathResult classPathResult = classPathHandle(type.toString());
         StringStatement stringStatement = new StringStatement(classPathResult.simpleClassPath + " " + instantName + " = " + value);
         classPathResult.allClassPath.forEach(stringStatement::addImportClassPath);
         return stringStatement;
@@ -165,7 +175,7 @@ public class StringTreeFactory implements TreeFactory {
                 // 前面的结束，并且这个符号要一起跟后面
                 classPathItemHandle(charArray, index, resultBuilder, allPath, allName);
                 resultBuilder.append(c);
-                if (c == ','){
+                if (c == ',') {
                     resultBuilder.append(' ');
                 }
                 continue;
@@ -221,7 +231,6 @@ public class StringTreeFactory implements TreeFactory {
         index[1] = -1;
         index[2] = -1;
     }
-
 
 
     static class ClassPathResult {

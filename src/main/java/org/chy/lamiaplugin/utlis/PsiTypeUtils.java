@@ -1,11 +1,14 @@
 package org.chy.lamiaplugin.utlis;
 
+import com.chy.lamia.convert.core.entity.TypeDefinition;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiType;
+import com.intellij.psi.impl.source.PsiClassReferenceType;
 import com.intellij.psi.util.PsiUtil;
 
 public class PsiTypeUtils {
@@ -30,6 +33,29 @@ public class PsiTypeUtils {
         return projectFileIndex.isInSourceContent(virtualFile);
     }
 
+    public static TypeDefinition toTypeDefinition(PsiType psiType) {
+        if (psiType instanceof PsiClassReferenceType type) {
+            TypeDefinition result = new TypeDefinition(type.rawType().getCanonicalText());
+            // 收集泛型
+            for (PsiType parameter : type.getParameters()) {
+                TypeDefinition typeDefinition = toTypeDefinition(parameter);
+                result.addGeneric(typeDefinition);
+            }
+            return result;
+        }
+
+        if (psiType instanceof PsiClassType type) {
+            TypeDefinition result = new TypeDefinition(type.rawType().getCanonicalText());
+            // 收集泛型
+            for (PsiType parameter : type.getParameters()) {
+                TypeDefinition typeDefinition = toTypeDefinition(parameter);
+                result.addGeneric(typeDefinition);
+            }
+            return result;
+        }
+
+        return new TypeDefinition(psiType.getCanonicalText());
+    }
 
 
 }

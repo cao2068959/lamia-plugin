@@ -1,6 +1,7 @@
 package org.chy.lamiaplugin.expression.components;
 
 import com.chy.lamia.convert.core.components.entity.Expression;
+import com.chy.lamia.convert.core.entity.MethodParameterWrapper;
 import com.chy.lamia.convert.core.utils.struct.Pair;
 import org.chy.lamiaplugin.exception.NoSuchMethodException;
 
@@ -34,6 +35,11 @@ public class StringExpression implements Expression {
         throw new NoSuchMethodException("StringExpression 不支持方法引用操作符");
     }
 
+    @Override
+    public MethodParameterWrapper toMethodParameterWrapper() {
+        throw new NoSuchMethodException("StringExpression 不支持 toMethodParameterWrapper");
+    }
+
     public Set<String> getImportClassPath() {
         return importClassPath;
     }
@@ -43,5 +49,10 @@ public class StringExpression implements Expression {
             importClassPath = new HashSet<>();
         }
         importClassPath.add(data);
+    }
+
+    @Override
+    public String toString() {
+        return (String) get();
     }
 }

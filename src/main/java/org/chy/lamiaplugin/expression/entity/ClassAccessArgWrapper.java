@@ -3,7 +3,7 @@ package org.chy.lamiaplugin.expression.entity;
 import com.chy.lamia.convert.core.components.entity.Expression;
 
 /**
- * 方法引用参数包装类, 如 User::getName 这样的参数
+ * 类访问的参数如： User.class 这样的参数
  */
 public class ClassAccessArgWrapper extends PsiArgWrapper {
 

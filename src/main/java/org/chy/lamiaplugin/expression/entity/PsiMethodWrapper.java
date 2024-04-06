@@ -1,5 +1,6 @@
 package org.chy.lamiaplugin.expression.entity;
 
+import com.chy.lamia.convert.core.entity.TypeDefinition;
 import com.chy.lamia.convert.core.expression.parse.entity.ArgWrapper;
 import com.chy.lamia.convert.core.expression.parse.entity.MethodWrapper;
 import com.chy.lamia.convert.core.utils.struct.Pair;
@@ -7,9 +8,12 @@ import com.intellij.psi.*;
 import com.intellij.psi.util.PsiMethodUtil;
 import com.siyeh.ig.psiutils.MethodCallUtils;
 import com.siyeh.ig.psiutils.VariableAccessUtils;
+import org.chy.lamiaplugin.expression.components.MethodCallParamStringExpression;
 import org.chy.lamiaplugin.expression.components.MethodReferenceStringExpression;
+import org.chy.lamiaplugin.expression.components.ParamStringExpression;
 import org.chy.lamiaplugin.expression.components.StringExpression;
 import org.chy.lamiaplugin.utlis.PsiMethodUtils;
+import org.chy.lamiaplugin.utlis.PsiTypeUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,13 +59,28 @@ public class PsiMethodWrapper extends MethodWrapper {
                 return null;
             }
             String varName = referenceExpression.getText();
-            VarArgWrapper result = new VarArgWrapper(new StringExpression(varName), varName);
-            result.setVarType(type.getCanonicalText());
+            VarArgWrapper result = new VarArgWrapper(new ParamStringExpression(varName), varName);
+            result.setVarType(PsiTypeUtils.toTypeDefinition(type));
             return result;
         }
         if (expression instanceof PsiClassObjectAccessExpression accessExpression) {
             String type = accessExpression.getOperand().getType().getCanonicalText();
             return new ClassAccessArgWrapper(new StringExpression(type), type);
+        }
+
+        if (expression instanceof PsiMethodCallExpression methodCallExpression) {
+            // 这个表达式执行之后的类型
+            PsiType execType = methodCallExpression.getType();
+            if (execType == null) {
+                return null;
+            }
+
+            TypeDefinition typeDefinition = PsiTypeUtils.toTypeDefinition(execType);
+            MethodCallParamStringExpression stringExpression = new MethodCallParamStringExpression(typeDefinition, methodCallExpression.getText());
+            VarArgWrapper result = new VarArgWrapper(stringExpression, null);
+            result.setMethodInvoke(true);
+            result.setVarType(typeDefinition);
+            return result;
         }
 
         return null;

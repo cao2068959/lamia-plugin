@@ -74,6 +74,7 @@ public class MarkerMessagePanel extends JPanel {
 
     public void fail(String msg, String data) {
         editorTextField.setFileType(PlainTextFileType.INSTANCE);
+        editorTextField.setDocument(null);
         editorTextField.setText(data);
         markerStatusButton.error(msg);
     }

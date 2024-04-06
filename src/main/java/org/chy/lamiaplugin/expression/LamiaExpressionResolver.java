@@ -2,10 +2,7 @@ package org.chy.lamiaplugin.expression;
 
 import cn.hutool.core.lang.Pair;
 import com.chy.lamia.convert.core.components.entity.Expression;
-import com.chy.lamia.convert.core.entity.LamiaConvertInfo;
-import com.chy.lamia.convert.core.entity.LamiaExpression;
-import com.chy.lamia.convert.core.entity.TypeDefinition;
-import com.chy.lamia.convert.core.entity.VarDefinition;
+import com.chy.lamia.convert.core.entity.*;
 import com.chy.lamia.convert.core.expression.parse.ConfigParseContext;
 import com.chy.lamia.convert.core.expression.parse.builder.BuilderContext;
 import com.chy.lamia.convert.core.expression.parse.builder.BuilderHandler;
@@ -15,9 +12,11 @@ import com.chy.lamia.convert.core.expression.parse.entity.ArgWrapper;
 import com.intellij.psi.*;
 import com.siyeh.ig.psiutils.MethodCallUtils;
 import org.chy.lamiaplugin.exception.LamiaConvertException;
+import org.chy.lamiaplugin.exception.LamiaException;
 import org.chy.lamiaplugin.expression.entity.ClassAccessArgWrapper;
 import org.chy.lamiaplugin.expression.entity.PsiMethodWrapper;
 import org.chy.lamiaplugin.expression.entity.VarArgWrapper;
+import org.chy.lamiaplugin.utlis.PsiTypeUtils;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -74,8 +73,7 @@ public class LamiaExpressionResolver {
         if (castType == null) {
             return null;
         }
-        String canonicalText = castType.getType().getCanonicalText();
-        return new TypeDefinition(canonicalText);
+        return PsiTypeUtils.toTypeDefinition(castType.getType());
     }
 
 
@@ -92,9 +90,14 @@ public class LamiaExpressionResolver {
         if ("mapping".equals(name)) {
             LamiaExpression result = new LamiaExpression();
             initPsiMethodWrapper(psiMethodWrapper, convertInfo);
-            List<String> argsNames = psiMethodWrapper.useAllArgsToName();
             result.updateBuild().setHolder(methodCall);
-            result.addSpreadArgs(argsNames);
+            List<ProtoMaterialInfo> allArgs = psiMethodWrapper.useAllArgs().stream()
+                    .map(argWrapper -> {
+                        ProtoMaterialInfo protoMaterialInfo = toProtoMaterialInfo(argWrapper);
+                        protoMaterialInfo.setSpread(true);
+                        return protoMaterialInfo;
+                    }).toList();
+            result.addArgs(allArgs);
             return new Pair<>(result, methodCall);
         }
         if ("setField".equals(name)) {
@@ -102,7 +105,8 @@ public class LamiaExpressionResolver {
             initPsiMethodWrapper(psiMethodWrapper, convertInfo);
             List<String> argsNames = psiMethodWrapper.useAllArgsToName();
             result.updateBuild().setHolder(methodCall);
-            result.addArgs(argsNames);
+            List<ProtoMaterialInfo> allArgs = psiMethodWrapper.useAllArgs().stream().map(this::toProtoMaterialInfo).toList();
+            result.addArgs(allArgs);
 
             return new Pair<>(result, methodCall);
         }
@@ -112,6 +116,15 @@ public class LamiaExpressionResolver {
         }
 
         return null;
+    }
+
+    private ProtoMaterialInfo toProtoMaterialInfo(ArgWrapper argWrapper) {
+
+        if (argWrapper instanceof VarArgWrapper varArgWrapper) {
+            return ProtoMaterialInfo.simpleMaterialInfo(varArgWrapper.getName());
+        }
+
+        throw new LamiaException("不支持 类型 [" + argWrapper.getClass() + "] 转换成 ProtoMaterialInfo 对象");
     }
 
     /**
@@ -133,12 +146,11 @@ public class LamiaExpressionResolver {
             }
 
             // 如果是 mapping / setFiled 这种结束handler，那么记录一下 对应当前的句柄，方便后续修改表达式
-            if (handler instanceof BuilderArgsUse){
+            if (handler instanceof BuilderArgsUse) {
                 result.getBuildInfo().setHolder(methodCallWrapper.getMethodCallExpression());
             }
             // 执行handler策略
             handler.config(result, methodCallWrapper, context);
-
 
 
             // 获取链式调用的下一个方法
@@ -169,7 +181,7 @@ public class LamiaExpressionResolver {
 
         if (wrapper instanceof VarArgWrapper varArgWrapper) {
             String target = varArgWrapper.getName();
-            VarDefinition varDefinition = convertInfo.getArgs().get(target);
+            VarDefinition varDefinition = convertInfo.getScopeVar().get(target);
             if (varDefinition == null) {
                 throw new LamiaConvertException("找不到对应的变量定义: " + target);
             }
@@ -186,7 +198,10 @@ public class LamiaExpressionResolver {
     private void initPsiMethodWrapper(PsiMethodWrapper psiMethodWrapper, LamiaConvertInfo convertInfo) {
         psiMethodWrapper.initArgs(psiArgWrapper -> {
             if (psiArgWrapper instanceof VarArgWrapper varArgWrapper) {
-                convertInfo.addVarArgs(new VarDefinition(varArgWrapper.getName(), new TypeDefinition(varArgWrapper.getVarType())));
+                if (varArgWrapper.isMethodInvoke()) {
+                    return;
+                }
+                convertInfo.addScopeVar(new VarDefinition(varArgWrapper.getName(), varArgWrapper.getVarType()));
             }
         });
     }

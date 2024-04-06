@@ -40,6 +40,8 @@ public class LamiaLineMarkerInfo<T extends PsiElement> extends LineMarkerInfo<T>
     public static class Handler<T extends PsiElement> {
         private final Project project;
         private PsiMethodCallExpression lamiaMethod;
+        private int methodLen;
+
         private final boolean isComplete;
         private final T element;
         private final Document document;
@@ -49,7 +51,7 @@ public class LamiaLineMarkerInfo<T extends PsiElement> extends LineMarkerInfo<T>
                        PsiMethodCallExpression lamiaMethod, boolean isComplete) {
             this.element = element;
             this.project = element.getProject();
-            this.lamiaMethod = lamiaMethod;
+            updateLamiaMethod(lamiaMethod);
             this.isComplete = isComplete;
 
             PsiDocumentManager documentManager = PsiDocumentManager.getInstance(project);
@@ -73,8 +75,11 @@ public class LamiaLineMarkerInfo<T extends PsiElement> extends LineMarkerInfo<T>
 
 
         public PsiMethodCallExpression getLamiaMethod() {
-           if (lamiaMethod.isValid()) {
-                return lamiaMethod;
+            if (this.lamiaMethod.isValid()) {
+                if (this.lamiaMethod.getTextLength() != methodLen) {
+                    updateLamiaMethod(PsiMethodUtils.getLamiaStartExpression(lamiaMethod));
+                }
+                return this.lamiaMethod;
             }
             PsiMethodCallExpression methodCall = PsiMethodUtils.getMethodCall(lineMarkerInfo.getElement());
             methodCall = PsiMethodUtils.getLamiaStartExpression(methodCall);
@@ -84,9 +89,17 @@ public class LamiaLineMarkerInfo<T extends PsiElement> extends LineMarkerInfo<T>
                         "\n" +
                         "QQ: 704188931");
             }
-
-            lamiaMethod = methodCall;
+            updateLamiaMethod(methodCall);
             return lamiaMethod;
+        }
+
+        private void updateLamiaMethod(PsiMethodCallExpression expression) {
+            if (expression == null) {
+                return;
+            }
+
+            this.lamiaMethod = expression;
+            this.methodLen = expression.getTextLength();
         }
 
         private PsiMethodCallExpression getLamiaMethodByOffset(int offset) {

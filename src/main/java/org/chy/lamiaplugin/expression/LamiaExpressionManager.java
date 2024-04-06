@@ -93,7 +93,7 @@ public class LamiaExpressionManager {
                 failMsg = convertException.getMessage();
             } else {
                 LOG.warn("表达式生成异常", e);
-                failMsg = "Generate conversion code exception";
+                failMsg = "Generate conversion code exception \n msg: " + e.getMessage();
             }
             return ConvertResult.fail(failMsg);
         }
@@ -163,7 +163,6 @@ public class LamiaExpressionManager {
     }
 
     public void updateDependentRelations(PsiMethodCallExpression expression) {
-
         LamiaExpression lamiaExpression = new LamiaExpression(expression);
         // 如果表达式无效了，那也不需要去添加额外的关系了
         if (!expression.isValid()) {

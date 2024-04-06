@@ -101,10 +101,10 @@ public class LamiaLineMarkerHandler {
 
     private LamiaCode getLamaCode(PsiMethodCallExpression psiElement, boolean isComplete) {
         // 如果已经知道表达式是不完整的 直接返回对应的提示
-        if (!isComplete) {
+        /*if (!isComplete) {
             return new LamiaCode("Invalid expression, please set the corresponding expression correctly. \n" +
                     "You can refer to the document: https://github.com/cao2068959/lamia", false);
-        }
+        }*/
 
         // 用点击的表达式生成对应的转换语句
         LamiaExpressionManager lamiaExpressionManager = LamiaExpressionManager.getInstance(project);
