@@ -25,7 +25,7 @@ public class LamiaPsiUtils {
         }
         StringBuilder insertText = new StringBuilder();
         PsiElement replaceExpression = null;
-        String endAppend = "";
+
 
         // 如果不是 builder模式，那么需要先开启 builder模式
         if (buildInfo.isBuilder()) {
@@ -65,8 +65,27 @@ public class LamiaPsiUtils {
             }
 
         });
+    }
 
 
+    public static PsiElement insertCodeAfter(PsiElement psiElement, String newCode, Project project) {
+
+        PsiElementFactory psiElementFactory = PsiElementFactory.getInstance(project);
+        PsiElement newElement = psiElementFactory.createStatementFromText(newCode, null);
+
+        Wrapper<PsiElement> result = new Wrapper<>();
+        WriteCommandAction.runWriteCommandAction(project, () -> {
+            PsiElement belongPsiCodeBlockElement = PsiMethodUtils.getBelongPsiCodeBlockElement(psiElement);
+            if (belongPsiCodeBlockElement == null) {
+                return;
+            }
+            PsiElement element = belongPsiCodeBlockElement.getParent()
+                    .addAfter(newElement, belongPsiCodeBlockElement);
+
+            result.setData(element);
+        });
+
+        return result.data;
     }
 
 }

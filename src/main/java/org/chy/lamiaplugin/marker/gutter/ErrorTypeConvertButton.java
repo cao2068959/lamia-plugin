@@ -1,8 +1,6 @@
 package org.chy.lamiaplugin.marker.gutter;
 
-import com.chy.lamia.convert.core.entity.AbnormalVar;
-import com.chy.lamia.convert.core.entity.BuildInfo;
-import com.chy.lamia.convert.core.entity.TypeDefinition;
+import com.chy.lamia.convert.core.entity.*;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.command.WriteCommandAction;
@@ -11,6 +9,7 @@ import com.intellij.openapi.ui.popup.ListPopup;
 import com.intellij.openapi.ui.popup.ListPopupStep;
 import com.intellij.openapi.ui.popup.PopupStep;
 import com.intellij.openapi.ui.popup.util.BaseListPopupStep;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementFactory;
 import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.ui.awt.RelativePoint;
@@ -45,8 +44,10 @@ public class ErrorTypeConvertButton extends GutterButton {
         //closeBalloon();
     }
 
+    /**
+     * 添加一个忽略表达式
+     */
     public void addIgnoreExpression() {
-
         TypeDefinition instanceType = abnormalVar.getInstanceType();
         String text = ".ignoreField(" + instanceType.simpleClassName() + "::" + getGetter(abnormalVar.getVarName()) + ")";
         BuildInfo errorArgBuildInfo = abnormalVar.getErrorMaterial().getProtoMaterialInfo().getBuildInfo();
@@ -54,10 +55,45 @@ public class ErrorTypeConvertButton extends GutterButton {
 
     }
 
-    private String getGetter(String name) {
-        return "get" + name.substring(0, 1).toUpperCase() + name.substring(1);
+    /**
+     * 添加一个转换表达式
+     */
+    private void addConvertExpression() {
+
+
+        SimpleMaterialInfo errorMaterial = abnormalVar.getErrorMaterial();
+        ProtoMaterialInfo errorProtoMaterialInfo = errorMaterial.getProtoMaterialInfo();
+        String errorClass = errorMaterial.getType().simpleClassName();
+        String targetClass = abnormalVar.getType().simpleClassName();
+
+        String tempName = "temp" + errorClass;
+        String getter = getGetter(abnormalVar.getVarName());
+        String expression = targetClass + " " + tempName + " = Lamia.builder().rule().mapping(" + errorProtoMaterialInfo.getMaterial().getText()
+                + "." + getter + "()).build(" + targetClass + ".class);";
+
+        Object holder = errorProtoMaterialInfo.getBuildInfo().getHolder();
+        if (!(holder instanceof PsiMethodCallExpression callExpression)) {
+            return;
+        }
+
+        PsiElement psiElement = LamiaPsiUtils.insertCodeAfter(callExpression, expression, parentPanel.getProject());
+        String setter = getSetter(abnormalVar.getVarName(), tempName);
+        String setterExpression = abnormalVar.getInstanceName() + "." + setter + ";";
+        LamiaPsiUtils.insertCodeAfter(psiElement, setterExpression, parentPanel.getProject());
     }
 
+
+    private String getGetter(String name) {
+        return "get" + superHump(name);
+    }
+
+    private String getSetter(String name, String param) {
+        return "set" + superHump(name) + "(" + param + ")";
+    }
+
+    private String superHump(String name) {
+        return name.substring(0, 1).toUpperCase() + name.substring(1);
+    }
 
     public void showPopup(Component component, Point point) {
         ListPopup popup = JBPopupFactory.getInstance().createListPopup(new ErrorTypeConvertSelector());
@@ -73,15 +109,22 @@ public class ErrorTypeConvertButton extends GutterButton {
         @Override
         public PopupStep onChosen(HandleEnum selectedValue, boolean finalChoice) {
             addIgnoreExpression();
+
+            if (selectedValue == IGNORE_GEN) {
+                addConvertExpression();
+            }
+
             closeBalloon();
             return FINAL_CHOICE;
         }
+
 
         @Override
         public @NotNull String getTextFor(HandleEnum value) {
             return value.getDesc();
         }
     }
+
 
     enum HandleEnum {
         IGNORE("Ignoring fields"),

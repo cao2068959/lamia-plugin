@@ -15,6 +15,8 @@ public class MethodCallParamStringExpression extends StringExpression {
 
     @Override
     public MethodParameterWrapper toMethodParameterWrapper() {
-        return new MethodParameterWrapper(type, this);
+        MethodParameterWrapper parameterWrapper = new MethodParameterWrapper(type, this);
+        parameterWrapper.setText(data);
+        return parameterWrapper;
     }
 }

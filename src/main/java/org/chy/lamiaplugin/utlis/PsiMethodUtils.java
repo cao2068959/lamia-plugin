@@ -39,6 +39,28 @@ public class PsiMethodUtils {
         }
     }
 
+    /**
+     * 获取指定元素所在的代码块的子元素
+     *
+     * @param element
+     * @return
+     */
+    public static PsiElement getBelongPsiCodeBlockElement(PsiElement element) {
+        PsiElement self = element;
+        PsiElement parent = self.getParent();
+        while (true) {
+
+            if (parent instanceof PsiCodeBlock codeBlock) {
+                return self;
+            }
+            if (parent == null || parent instanceof PsiClass || parent instanceof PsiFile) {
+                return null;
+            }
+            self = parent;
+            parent = self.getParent();
+        }
+    }
+
     public static boolean isLamiaExpression(PsiElement psiElement) {
         PsiMethodCallExpression methodCallExpression = getRecentlyMethodCallExpression(psiElement);
         if (methodCallExpression == null) {
