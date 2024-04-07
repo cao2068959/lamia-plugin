@@ -77,6 +77,7 @@ public class MarkerMessagePanel extends JPanel {
         editorTextField.setDocument(null);
         editorTextField.setText(data);
         markerStatusButton.error(msg);
+        gutter.clear();
     }
 
 

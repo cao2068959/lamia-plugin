@@ -45,19 +45,16 @@ public class PsiMethodUtils {
      * @param element
      * @return
      */
-    public static PsiElement getBelongPsiCodeBlockElement(PsiElement element) {
+    public static PsiStatement getBelongPsiStatement(PsiElement element) {
         PsiElement self = element;
-        PsiElement parent = self.getParent();
         while (true) {
-
-            if (parent instanceof PsiCodeBlock codeBlock) {
-                return self;
+            if (self instanceof PsiStatement result) {
+                return result;
             }
-            if (parent == null || parent instanceof PsiClass || parent instanceof PsiFile) {
+            if (self == null || self instanceof PsiClass || self instanceof PsiFile || self instanceof PsiCodeBlock) {
                 return null;
             }
-            self = parent;
-            parent = self.getParent();
+            self = self.getParent();
         }
     }
 
@@ -97,6 +94,42 @@ public class PsiMethodUtils {
         }
         return null;
     }
+
+    /**
+     * 选向下找最近的一层可执行的表达式， 包括PsiMethodCallExpression 或者
+     *
+     * @param psiElement
+     * @return
+     */
+    public static PsiElement getRecentlyExecExpression(PsiElement psiElement, int depth) {
+        if (psiElement == null || depth <= 0) {
+            return null;
+        }
+
+        PsiElement[] children = psiElement.getChildren();
+        for (PsiElement child : children) {
+            if (child instanceof PsiWhiteSpace || child instanceof PsiJavaToken) {
+                continue;
+            }
+
+            if (child instanceof PsiMethodCallExpression) {
+                return child;
+            }
+
+            if (child instanceof PsiTypeCastExpression) {
+                return child;
+            }
+
+            PsiElement recentlyExecExpression = getRecentlyExecExpression(child, depth - 1);
+            if (recentlyExecExpression != null) {
+                return recentlyExecExpression;
+            }
+        }
+        return null;
+    }
+
+
+
 
     public static PsiMethodCallExpression getMethodCallExpressionFromChildren(PsiElement psiElement, int deep) {
         return getMethodCallExpressionFromChildren(psiElement, true, deep);

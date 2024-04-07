@@ -4,10 +4,7 @@ import com.chy.lamia.convert.core.entity.TypeDefinition;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiClassType;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiType;
+import com.intellij.psi.*;
 import com.intellij.psi.impl.source.PsiClassReferenceType;
 import com.intellij.psi.util.PsiUtil;
 
@@ -55,6 +52,21 @@ public class PsiTypeUtils {
         }
 
         return new TypeDefinition(psiType.getCanonicalText());
+    }
+
+    public static PsiType getType(PsiElement psiElement) {
+        if (psiElement == null) {
+            return null;
+        }
+
+        if (psiElement instanceof PsiMethodCallExpression psiMethodCallExpression) {
+            return psiMethodCallExpression.getType();
+        }
+
+        if (psiElement instanceof PsiTypeCastExpression psiTypeCastExpression) {
+            return psiTypeCastExpression.getType();
+        }
+        return null;
     }
 
 

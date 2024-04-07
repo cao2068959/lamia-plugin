@@ -1,6 +1,5 @@
 package org.chy.lamiaplugin.marker;
 
-import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.Presentation;
@@ -10,6 +9,7 @@ import com.intellij.openapi.project.Project;
 import org.chy.lamiaplugin.expression.LamiaExpressionManager;
 import org.chy.lamiaplugin.expression.entity.LamiaExpression;
 import org.chy.lamiaplugin.task.UpdateExpRelationTask;
+import org.chy.lamiaplugin.utlis.IconConstant;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -57,11 +57,11 @@ public class MarkerStatusButton extends AnAction {
     }
 
     private void setSuccessIcons() {
-        presentation.setIcon(AllIcons.Actions.Commit);
+        presentation.setIcon(IconConstant.TICK_ICON);
     }
 
     private void setFailIcons() {
-        presentation.setIcon(AllIcons.CodeWithMe.CwmTerminate);
+        presentation.setIcon(IconConstant.X_ICON);
     }
 
     public void success() {
@@ -74,7 +74,7 @@ public class MarkerStatusButton extends AnAction {
     public void unassociated(LamiaExpression lamiaExpression) {
         init();
         this.unassociatedPsiElement = lamiaExpression;
-        presentation.setIcon(AllIcons.General.BalloonWarning);
+        presentation.setIcon(IconConstant.WARNING_ICON);
         presentation.setText("The expression is not associated, \n" +
                 "which may result in failure to jump and incremental compilation. \n" +
                 "\n" +

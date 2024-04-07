@@ -1,6 +1,5 @@
 package org.chy.lamiaplugin.marker;
 
-import com.intellij.icons.AllIcons;
 import com.intellij.openapi.editor.EditorCustomElementRenderer;
 import com.intellij.openapi.editor.Inlay;
 import com.intellij.openapi.editor.markup.TextAttributes;

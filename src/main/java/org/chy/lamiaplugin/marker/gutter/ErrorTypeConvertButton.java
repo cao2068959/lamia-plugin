@@ -1,23 +1,22 @@
 package org.chy.lamiaplugin.marker.gutter;
 
 import com.chy.lamia.convert.core.entity.*;
-import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.ui.popup.ListPopup;
-import com.intellij.openapi.ui.popup.ListPopupStep;
 import com.intellij.openapi.ui.popup.PopupStep;
 import com.intellij.openapi.ui.popup.util.BaseListPopupStep;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiElementFactory;
 import com.intellij.psi.PsiMethodCallExpression;
+import com.intellij.psi.PsiReturnStatement;
+import com.intellij.psi.PsiStatement;
 import com.intellij.ui.awt.RelativePoint;
+import org.chy.lamiaplugin.utlis.IconConstant;
 import org.chy.lamiaplugin.utlis.LamiaPsiUtils;
+import org.chy.lamiaplugin.utlis.PsiMethodUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.chy.lamiaplugin.marker.gutter.ErrorTypeConvertButton.HandleEnum.IGNORE_GEN;
@@ -31,7 +30,7 @@ public class ErrorTypeConvertButton extends GutterButton {
     List<HandleEnum> allHandleType = List.of(HandleEnum.IGNORE, IGNORE_GEN);
 
     public ErrorTypeConvertButton(AbnormalVar abnormalVar, PsiMethodCallExpression psiElement) {
-        super("The converted field types do not match. Click to generate the corresponding conversion statement", AllIcons.Actions.AddList);
+        super("The converted field types do not match. Click to generate the corresponding conversion statement", IconConstant.PROMPT_ICON);
         this.abnormalVar = abnormalVar;
         this.lamiaExpression = psiElement;
     }
@@ -75,11 +74,19 @@ public class ErrorTypeConvertButton extends GutterButton {
         if (!(holder instanceof PsiMethodCallExpression callExpression)) {
             return;
         }
-
+        String instanceName = getInstanceNameHandle(callExpression);
         PsiElement psiElement = LamiaPsiUtils.insertCodeAfter(callExpression, expression, parentPanel.getProject());
         String setter = getSetter(abnormalVar.getVarName(), tempName);
-        String setterExpression = abnormalVar.getInstanceName() + "." + setter + ";";
+        String setterExpression = instanceName + "." + setter + ";";
         LamiaPsiUtils.insertCodeAfter(psiElement, setterExpression, parentPanel.getProject());
+    }
+
+    private String getInstanceNameHandle(PsiMethodCallExpression callExpression) {
+        PsiStatement statement = PsiMethodUtils.getBelongPsiStatement(callExpression);
+        if (statement instanceof PsiReturnStatement) {
+            return "result";
+        }
+        return abnormalVar.getInstanceName();
     }
 
 
