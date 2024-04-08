@@ -1,6 +1,6 @@
 plugins {
     id("java")
-    id("org.jetbrains.intellij") version "1.15.0"
+    id("org.jetbrains.intellij") version "1.17.3"
 }
 
 group = "org.chy"
@@ -16,7 +16,7 @@ repositories {
 // Configure Gradle IntelliJ Plugin
 // Read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
 intellij {
-    version.set("2022.2.5")
+    version.set("2023.3.6")
     type.set("IC") // Target IDE Platform
 
     plugins.set(listOf("com.intellij.java"))
@@ -25,7 +25,7 @@ intellij {
 tasks {
 
     patchPluginXml {
-        sinceBuild.set("202")
+        sinceBuild.set("222")
         untilBuild.set("243.*")
     }
 
