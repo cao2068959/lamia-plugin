@@ -27,7 +27,7 @@ public class MarkerStatusButton extends AnAction {
 
     public MarkerStatusButton(String defaultText, Project project) {
         this.defaultText = defaultText;
-        this.presentation = Presentation.newTemplatePresentation();
+        this.presentation = new Presentation();
         setSuccessIcons();
         presentation.setText(defaultText);
         this.actionButton = new ActionButton(this, presentation

@@ -23,7 +23,7 @@ public class UpdateExpRelationButton extends AnAction {
 
 
     public UpdateExpRelationButton(Project project) {
-        this.presentation = Presentation.newTemplatePresentation();
+        this.presentation = new Presentation();
         presentation.setIcon(IconConstant.REFRESH_ICON);
         presentation.setText("Click to reassociate all lamia expressions");
         this.actionButton = new ActionButton(this, presentation

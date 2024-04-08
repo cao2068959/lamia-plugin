@@ -61,7 +61,6 @@ public class LamiaLineMarkerHandler {
                     .setShadow(true)
                     .setHideOnAction(false)
                     .createBalloon();
-
             markerMessagePanel.setBalloon(balloon);
             balloon.show(new RelativePoint(event), Balloon.Position.below);
         });

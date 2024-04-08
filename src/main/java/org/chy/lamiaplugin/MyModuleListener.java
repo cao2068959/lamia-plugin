@@ -13,18 +13,29 @@ import com.intellij.psi.impl.file.impl.JavaFileManager;
 import com.intellij.psi.search.GlobalSearchScope;
 import org.chy.lamiaplugin.components.executor.ScheduledBatchExecutor;
 import org.chy.lamiaplugin.components.executor.UpdateExpRelationEvent;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
 
 public class MyModuleListener implements ModuleListener {
 
+
     @Override
-    public void moduleAdded(Project project, Module module) {
-        // 如果是 java 模块打开，那么就触发更新
-        if (ModuleType.get(module).equals(ModuleTypeManager.getInstance().findByID("JAVA_MODULE"))) {
+    public void modulesAdded(@NotNull Project project, @NotNull List<? extends Module> modules) {
+
+        if (hasJavaModule(modules)) {
             DumbService.getInstance(project).smartInvokeLater(() -> {
                 ScheduledBatchExecutor.instance.deliverEvent(new UpdateExpRelationEvent(project));
             });
         }
     }
 
-
+    private boolean hasJavaModule(List<? extends Module> modules) {
+        for (Module module : modules) {
+            if (ModuleType.get(module).equals(ModuleTypeManager.getInstance().findByID("JAVA_MODULE"))) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

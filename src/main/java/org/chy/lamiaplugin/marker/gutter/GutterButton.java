@@ -19,7 +19,7 @@ public abstract class GutterButton extends AnAction {
     int height = 20;
 
     public GutterButton(String text, Icon icon) {
-        presentation = Presentation.newTemplatePresentation();
+        presentation = new Presentation();
         presentation.setIcon(icon);
         presentation.setText(text);
         actionButton = new ActionButton(this, presentation, "MarkerMessageGutter", new Dimension(width, height));
