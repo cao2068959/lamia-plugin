@@ -5,6 +5,7 @@ import com.chy.lamia.convert.core.entity.*;
 import com.intellij.lang.jvm.JvmParameter;
 import com.intellij.lang.jvm.types.JvmType;
 import com.intellij.psi.*;
+import org.chy.lamiaplugin.utlis.PsiTypeUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -41,7 +42,7 @@ public class IdeaJavaTypeResolver implements TypeResolver {
             Setter setter = new Setter();
             setter.setVarName(setterVarName);
             setter.setMethodName(method.getName());
-            setter.setType(new TypeDefinition(parameter.getType().getCanonicalText()));
+            setter.setType(PsiTypeUtils.toTypeDefinition(parameter.getType()));
             result.put(setterVarName, setter);
         }
 
@@ -78,7 +79,7 @@ public class IdeaJavaTypeResolver implements TypeResolver {
         List<VarDefinition> result = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
             PsiParameter parameter = parameters.getParameter(i);
-            TypeDefinition typeDefinition = new TypeDefinition(parameter.getType().getCanonicalText());
+            TypeDefinition typeDefinition = PsiTypeUtils.toTypeDefinition(parameter.getType());
             VarDefinition varDefinition = new VarDefinition(parameter.getName(), typeDefinition);
             result.add(varDefinition);
         }
@@ -102,7 +103,7 @@ public class IdeaJavaTypeResolver implements TypeResolver {
             Getter getter = new Getter();
             getter.setVarName(getterVarName);
             getter.setMethodName(method.getName());
-            getter.setType(new TypeDefinition(returnType.getCanonicalText()));
+            getter.setType(PsiTypeUtils.toTypeDefinition(returnType));
             result.put(getterVarName, getter);
         }
         return result;
