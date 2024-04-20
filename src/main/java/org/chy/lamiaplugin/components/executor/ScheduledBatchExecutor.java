@@ -1,8 +1,6 @@
 package org.chy.lamiaplugin.components.executor;
 
-import com.intellij.compiler.server.BuildManager;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.vfs.VirtualFile;
 import groovy.util.logging.Slf4j;
 
 import java.io.File;
@@ -11,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
-import java.util.function.Consumer;
 
 @Slf4j
 public class ScheduledBatchExecutor implements Runnable {

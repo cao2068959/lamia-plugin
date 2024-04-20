@@ -1,7 +1,6 @@
 package org.chy.lamiaplugin.utlis;
 
 import com.intellij.openapi.util.IconLoader;
-import org.chy.lamiaplugin.marker.LamiaLineMarkerInfo;
 
 import javax.swing.*;
 
