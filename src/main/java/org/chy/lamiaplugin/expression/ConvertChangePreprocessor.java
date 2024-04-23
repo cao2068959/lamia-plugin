@@ -7,6 +7,8 @@ import com.chy.lamia.convert.core.components.entity.Expression;
 import com.chy.lamia.convert.core.components.entity.Statement;
 import com.chy.lamia.utils.Lists;
 
+import com.intellij.ide.highlighter.JavaFileType;
+import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.PsiTreeChangeEventImpl;
@@ -81,6 +83,13 @@ public class ConvertChangePreprocessor implements PsiTreeChangePreprocessor {
             return;
         }
 
+        PsiFile file = event.getFile();
+        if (file == null) {
+            return;
+        }
+        if (!(file.getFileType() instanceof JavaFileType)) {
+            return;
+        }
         buildRefresh(event);
 
         if (event.getCode() == CHILD_REMOVED) {
