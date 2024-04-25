@@ -39,6 +39,6 @@ tasks {
 
 
 dependencies{
-    implementation("io.github.cao2068959", "lamia-compile","2.2.1" )
+    implementation("io.github.cao2068959", "lamia-compile","2.2.2" )
 }
 
