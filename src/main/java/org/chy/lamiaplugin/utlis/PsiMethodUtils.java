@@ -139,6 +139,9 @@ public class PsiMethodUtils {
                 return methodCallExpression;
             }
         }
+        if (psiElement instanceof PsiLanguageInjectionHost) {
+             return null;
+        }
 
         PsiElement[] children = psiElement.getChildren();
         List<PsiElement> next = new ArrayList<>();
