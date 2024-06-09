@@ -1,5 +1,7 @@
 # 1. 简介
 
+> 如果图片加载被墙可以访问 [lamia-plugin-gitee](https://gitee.com/bigNoseCat/lamia-plugin) 
+
 本项目是一个 `idea-plugin` , 这个插件是用来辅助框架 [lamia](https://github.com/cao2068959/lamia) ，可以帮助
 使用者更安全、便捷的使用lamia
 

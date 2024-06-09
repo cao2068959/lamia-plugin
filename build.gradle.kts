@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "org.chy"
-version = "1.1.1-222-N"
+version = "1.2.0-222-N"
 
 repositories {
     mavenLocal()
@@ -39,6 +39,6 @@ tasks {
 
 
 dependencies{
-    implementation("io.github.cao2068959", "lamia-compile","2.2.2" )
+    implementation("io.github.cao2068959", "lamia-compile","2.3.0" )
 }
 
