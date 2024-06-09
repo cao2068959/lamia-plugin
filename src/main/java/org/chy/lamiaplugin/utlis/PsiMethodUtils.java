@@ -127,8 +127,6 @@ public class PsiMethodUtils {
     }
 
 
-
-
     public static PsiMethodCallExpression getMethodCallExpressionFromChildren(PsiElement psiElement, int deep) {
         return getMethodCallExpressionFromChildren(psiElement, true, deep);
     }
@@ -140,9 +138,8 @@ public class PsiMethodUtils {
             }
         }
         if (psiElement instanceof PsiLanguageInjectionHost) {
-             return null;
+            return null;
         }
-
         PsiElement[] children = psiElement.getChildren();
         List<PsiElement> next = new ArrayList<>();
         for (PsiElement child : children) {

@@ -83,6 +83,16 @@ public class PsiMethodWrapper extends MethodWrapper {
             return result;
         }
 
+        if (expression instanceof PsiThisExpression thisExpression) {
+            PsiType type = thisExpression.getType();
+            if (type == null) {
+                return null;
+            }
+            VarArgWrapper result = new VarArgWrapper(new ParamStringExpression("this"), "this");
+            result.setVarType(PsiTypeUtils.toTypeDefinition(type));
+            return result;
+        }
+
         return null;
     }
 
