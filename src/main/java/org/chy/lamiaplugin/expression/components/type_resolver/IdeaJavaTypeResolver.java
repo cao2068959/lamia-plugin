@@ -5,6 +5,7 @@ import com.chy.lamia.convert.core.entity.*;
 import com.intellij.lang.jvm.JvmParameter;
 import com.intellij.lang.jvm.types.JvmType;
 import com.intellij.psi.*;
+import org.chy.lamiaplugin.utlis.PsiMethodUtils;
 import org.chy.lamiaplugin.utlis.PsiTypeUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -12,6 +13,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class IdeaJavaTypeResolver implements TypeResolver {
 
@@ -25,10 +28,21 @@ public class IdeaJavaTypeResolver implements TypeResolver {
     }
 
 
+    private TypeDefinition getMethodBelongClass(PsiMethod method, Map<String, TypeDefinition> cache) {
+        PsiClass belongClass = PsiMethodUtils.getBelongClass(method);
+        if (belongClass == null) {
+            return null;
+        }
+        String qualifiedName = belongClass.getQualifiedName();
+        return cache.computeIfAbsent(qualifiedName, __ -> new TypeDefinition(qualifiedName));
+    }
+
     @Override
     public Map<String, Setter> getInstantSetters() {
         Map<String, Setter> result = new HashMap<>();
         PsiMethod[] allMethods = psiClass.getAllMethods();
+        Map<String, TypeDefinition> cache = new HashMap<>();
+
         for (PsiMethod method : allMethods) {
             String setterVarName = getSetterVarName(method);
             if (setterVarName == null) {
@@ -42,6 +56,9 @@ public class IdeaJavaTypeResolver implements TypeResolver {
             Setter setter = new Setter();
             setter.setVarName(setterVarName);
             setter.setMethodName(method.getName());
+
+            TypeDefinition methodBelongClass = getMethodBelongClass(method, cache);
+            setter.setParentClassType(methodBelongClass);
             setter.setType(PsiTypeUtils.toTypeDefinition(parameter.getType()));
             result.put(setterVarName, setter);
         }
@@ -90,6 +107,8 @@ public class IdeaJavaTypeResolver implements TypeResolver {
     public Map<String, Getter> getInstantGetters() {
         Map<String, Getter> result = new HashMap<>();
         PsiMethod[] allMethods = psiClass.getAllMethods();
+        Map<String, TypeDefinition> cache = new HashMap<>();
+
         for (PsiMethod method : allMethods) {
             String getterVarName = getGetterVarName(method);
             if (getterVarName == null) {
@@ -99,10 +118,11 @@ public class IdeaJavaTypeResolver implements TypeResolver {
             if (returnType == null) {
                 continue;
             }
-
+            TypeDefinition methodBelongClass = getMethodBelongClass(method, cache);
             Getter getter = new Getter();
             getter.setVarName(getterVarName);
             getter.setMethodName(method.getName());
+            getter.setParentClassType(methodBelongClass);
             getter.setType(PsiTypeUtils.toTypeDefinition(returnType));
             result.put(getterVarName, getter);
         }

@@ -351,4 +351,14 @@ public class PsiMethodUtils {
         return new Pair<>(className, methodName);
     }
 
+    /**
+     * 获取方法所在的类
+     *
+     * @param method
+     * @return
+     */
+    public static PsiClass getBelongClass(PsiMethod method) {
+        return method.getContainingClass();
+    }
+
 }

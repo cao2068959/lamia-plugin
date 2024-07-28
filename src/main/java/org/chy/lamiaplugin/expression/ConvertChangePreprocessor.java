@@ -8,12 +8,12 @@ import com.chy.lamia.convert.core.components.entity.Statement;
 import com.chy.lamia.utils.Lists;
 
 import com.intellij.ide.highlighter.JavaFileType;
-import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.PsiTreeChangeEventImpl;
 import com.intellij.psi.impl.PsiTreeChangePreprocessor;
 
+import org.chy.lamiaplugin.BuildRefreshHandler;
 import org.chy.lamiaplugin.components.executor.*;
 import org.chy.lamiaplugin.expression.components.SimpleNameHandler;
 import org.chy.lamiaplugin.expression.components.StringExpression;
@@ -44,6 +44,7 @@ public class ConvertChangePreprocessor implements PsiTreeChangePreprocessor {
 
 
     public void projectLoad(Project project) {
+        BuildRefreshHandler.listen(project);
         ScheduledBatchExecutor.instance.registerBatchExecutor(new LamiaExpressionChangeExecutor(project));
     }
 
@@ -77,48 +78,57 @@ public class ConvertChangePreprocessor implements PsiTreeChangePreprocessor {
 
     @Override
     public void treeChanged(@NotNull PsiTreeChangeEventImpl event) {
-        if (!(event.getCode() == CHILD_REPLACED ||
-                event.getCode() == BEFORE_CHILD_REPLACEMENT ||
-                event.getCode() == CHILD_REMOVED || event.getCode() == CHILD_ADDED)) {
-            return;
-        }
+        doTreeChanged(event);
+    }
 
-        PsiFile file = event.getFile();
-        if (file == null) {
-            return;
-        }
-        if (!(file.getFileType() instanceof JavaFileType)) {
-            return;
-        }
-        buildRefresh(event);
-
-        if (event.getCode() == CHILD_REMOVED) {
-            PsiMethodCallExpression lamiaStartExpression = getLamiaExpression(event.getChild(), false);
-            if (lamiaStartExpression == null) {
+    public void doTreeChanged(@NotNull PsiTreeChangeEventImpl event) {
+        try {
+            if (!(event.getCode() == CHILD_REPLACED ||
+                    event.getCode() == BEFORE_CHILD_REPLACEMENT ||
+                    event.getCode() == CHILD_REMOVED || event.getCode() == CHILD_ADDED)) {
                 return;
             }
-            ScheduledBatchExecutor.instance.deliverEvent(new LamiaExpressionChangeEvent(lamiaStartExpression, ChangeType.delete, project));
-            return;
-        }
 
-        if (event.getCode() == BEFORE_CHILD_REPLACEMENT) {
-            beforeChildReplacementHandler(event);
-            return;
-        }
-
-        if (event.getCode() == CHILD_REPLACED) {
-            PsiMethodCallExpression lamiaStartExpression = getLamiaExpression(event.getNewChild(), false);
-            if (lamiaStartExpression == null) {
+            PsiFile file = event.getFile();
+            if (file == null) {
                 return;
             }
-            ScheduledBatchExecutor.instance.deliverEvent(new LamiaExpressionChangeEvent(lamiaStartExpression, ChangeType.update, project));
-            return;
-        }
+            if (!(file.getFileType() instanceof JavaFileType)) {
+                return;
+            }
+            buildRefresh(event);
 
-        if (event.getCode() == CHILD_ADDED) {
-            extractExpressionFromMethod(event.getChild()).forEach(lamiaStartExpression -> {
+            if (event.getCode() == CHILD_REMOVED) {
+                PsiMethodCallExpression lamiaStartExpression = getLamiaExpression(event.getChild(), false);
+                if (lamiaStartExpression == null) {
+                    return;
+                }
+                ScheduledBatchExecutor.instance.deliverEvent(new LamiaExpressionChangeEvent(lamiaStartExpression, ChangeType.delete, project));
+                return;
+            }
+
+            if (event.getCode() == BEFORE_CHILD_REPLACEMENT) {
+                beforeChildReplacementHandler(event);
+                return;
+            }
+
+            if (event.getCode() == CHILD_REPLACED) {
+                PsiMethodCallExpression lamiaStartExpression = getLamiaExpression(event.getNewChild(), false);
+                if (lamiaStartExpression == null) {
+                    return;
+                }
                 ScheduledBatchExecutor.instance.deliverEvent(new LamiaExpressionChangeEvent(lamiaStartExpression, ChangeType.update, project));
-            });
+                return;
+            }
+
+            if (event.getCode() == CHILD_ADDED) {
+                extractExpressionFromMethod(event.getChild()).forEach(lamiaStartExpression -> {
+                    ScheduledBatchExecutor.instance.deliverEvent(new LamiaExpressionChangeEvent(lamiaStartExpression, ChangeType.update, project));
+                });
+            }
+
+        } catch (Throwable t) {
+            t.printStackTrace();
         }
     }
 

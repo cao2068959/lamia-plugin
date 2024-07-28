@@ -1,15 +1,28 @@
 package org.chy.lamiaplugin.components.executor;
 
+import com.chy.lamia.convert.core.utils.Lists;
+import com.intellij.compiler.server.BuildManager;
 import com.intellij.openapi.application.ApplicationManager;
 
+import com.intellij.openapi.command.WriteCommandAction;
+import com.intellij.openapi.compiler.CompilerManager;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.roots.CompilerModuleExtension;
+import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.newvfs.persistent.PersistentFS;
 import com.intellij.psi.*;
 
+import com.intellij.psi.util.PsiUtil;
+import org.chy.lamiaplugin.BuildRefreshHandler;
 import org.chy.lamiaplugin.expression.LamiaExpressionManager;
 import org.chy.lamiaplugin.expression.entity.LamiaExpression;
 import org.chy.lamiaplugin.expression.entity.RelationClassWrapper;
+import org.chy.lamiaplugin.utlis.PsiMethodUtils;
 import org.chy.lamiaplugin.utlis.Wrapper;
 
 import java.io.IOException;
@@ -18,6 +31,7 @@ import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -77,7 +91,7 @@ public class BuildRefreshExecutor implements BatchExecutor<FileChangeEvent> {
         }
 
         for (PsiFile file : needRefreshFile) {
-            setLastModifiedTime(file);
+            refreshFile(file);
         }
 
         for (LamiaExpression lamiaExpression : needRefreshLamiaExpression) {
@@ -95,15 +109,7 @@ public class BuildRefreshExecutor implements BatchExecutor<FileChangeEvent> {
         return result.getData();
     }
 
-    public void setLastModifiedTime(PsiFile file) {
-        VirtualFile virtualFile = file.getContainingFile().getVirtualFile();
-        if (virtualFile != null) {
-            Path path = Path.of(virtualFile.getPath());
-            try {
-                Files.setLastModifiedTime(path, FileTime.from(Instant.now()));
-            } catch (IOException e) {
-                LOG.error("update time error", e);
-            }
-        }
+    public void refreshFile(PsiFile file) {
+        BuildRefreshHandler.getInstance(file.getProject()).refresh(file);
     }
 }
